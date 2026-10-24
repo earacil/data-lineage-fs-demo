@@ -1,0 +1,7 @@
+id,name,type,regulation,periodicity
+FC01,Solvency Report,Regulatory,COREP,Quarterly
+FC02,Large Exposures Report,Regulatory,COREP,Quarterly
+FC03,Balance Sheet Report,Regulatory,FINREP,Quarterly
+FC04,Risk Data Aggregation Dashboard,Dashboard,BCBS239,Monthly
+FC05,Expense Dashboard,Dashboard,N/A,Monthly
+FC06,Customer Churn Model,AI Model,N/A,Weekly

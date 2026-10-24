@@ -1,0 +1,8 @@
+id,name,technology,type,criticality
+SS01,Core Banking PL/SQL,PL/SQL,Core banking,High
+SS02,Customer CRM,PostgreSQL,CRM,Medium
+SS03,SAS Risk Engine,SAS,Risk,High
+SS04,Cards Processing Platform,DB2,Cards,High
+SS05,Commercial BI,Qlik,BI,Medium
+SS06,Cloud Data Platform,BigQuery,Data platform,High
+SS07,Legacy Data Mart,Teradata,Data warehouse,Low

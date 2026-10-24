@@ -1,0 +1,82 @@
+fqn,name,kind,data_type,field_type,field_type_evidence,load_batch
+CORE.ACCOUNT.ACCOUNT_ID,ACCOUNT_ID,COLUMN,NUMBER(12),identifier,Name ends in _ID and type is integer NUMBER,P1
+CORE.ACCOUNT.PRODUCT_CODE,PRODUCT_CODE,COLUMN,VARCHAR(6),category,Short code with low cardinality (<50 distinct values),P1
+CORE.ACCOUNT.BALANCE,BALANCE,COLUMN,"NUMBER(18,2)",amount,Name contains BALANCE and type is NUMBER with 2 decimals,P1
+CORE.ACCOUNT.CURRENCY,CURRENCY,COLUMN,VARCHAR(3),currency_code,3-letter uppercase values matching ISO 4217,P1
+CORE.LOAN.LOAN_ID,LOAN_ID,COLUMN,NUMBER(12),identifier,Name ends in _ID and type is integer NUMBER,P1
+CORE.LOAN.CUSTOMER_ID,CUSTOMER_ID,COLUMN,NUMBER(10),identifier,Name ends in _ID and type is integer NUMBER,P1
+CORE.LOAN.DRAWN_AMOUNT,DRAWN_AMOUNT,COLUMN,"NUMBER(18,2)",amount,Name contains AMOUNT and type is NUMBER with 2 decimals,P1
+CORE.LOAN.UNDRAWN_AMOUNT,UNDRAWN_AMOUNT,COLUMN,"NUMBER(18,2)",amount,Name contains AMOUNT and type is NUMBER with 2 decimals,P1
+CORE.LOAN.ASSET_CLASS,ASSET_CLASS,COLUMN,VARCHAR(12),category,Short code with low cardinality (<20 distinct values),P1
+CRM.CUSTOMER.CUSTOMER_ID,CUSTOMER_ID,COLUMN,NUMBER(10),identifier,Name ends in _ID and type is integer NUMBER,P1
+CRM.CUSTOMER.SEGMENT_CODE,SEGMENT_CODE,COLUMN,VARCHAR(4),category,Short code with low cardinality (<10 distinct values),P1
+CRM.CUSTOMER.ONBOARDING_DATE,ONBOARDING_DATE,COLUMN,DATE,date,Native DATE type; name contains DATE,P1
+SAS_RISK.RATING.INTERNAL_RATING,INTERNAL_RATING,COLUMN,NUMBER(2),rating,Integer in range 1-10 with ordinal semantics,P2
+SAS_RISK.RATING.PD,PD,COLUMN,"NUMBER(9,8)",probability,"Values strictly within [0,1]; name is a known acronym (probability of default)",P2
+SAS_RISK.RISK_WEIGHT.RISK_WEIGHT,RISK_WEIGHT,COLUMN,"NUMBER(5,2)",rate,Name contains WEIGHT; values between 0 and 1.5,P2
+CARDS.CARD_TX.CUSTOMER_ID,CUSTOMER_ID,COLUMN,NUMBER(10),identifier,Name ends in _ID and type is integer NUMBER,P4
+CARDS.CARD_TX.AMOUNT,AMOUNT,COLUMN,"NUMBER(12,2)",amount,Name is AMOUNT and type is NUMBER with 2 decimals,P4
+CARDS.CARD_TX.MCC,MCC,COLUMN,VARCHAR(4),category,4-digit merchant category code,P4
+CARDS.CARD_TX.CHANNEL,CHANNEL,COLUMN,VARCHAR(10),category,"Low cardinality text (POS, ONLINE, ATM)",P4
+CARDS.CARD_TX.TX_DATE,TX_DATE,COLUMN,DATE,date,Native DATE type; name contains DATE,P4
+LEGACY_DM.BRANCH_MONTHLY.BRANCH_ID,BRANCH_ID,COLUMN,NUMBER(6),identifier,Name ends in _ID and type is integer NUMBER,P5
+LEGACY_DM.BRANCH_MONTHLY.TOTAL_DEPOSITS,TOTAL_DEPOSITS,COLUMN,"NUMBER(18,2)",amount,Name starts with TOTAL_ and type is NUMBER with 2 decimals,P5
+LEGACY_DM.BRANCH_MONTHLY.TOTAL_LOANS,TOTAL_LOANS,COLUMN,"NUMBER(18,2)",amount,Name starts with TOTAL_ and type is NUMBER with 2 decimals,P5
+CONST.LITERAL.EUR,EUR,CONSTANT,VARCHAR(3),constant,Fixed literal 'EUR' with no source column,P3
+STG.STG_ACCOUNT.*,*,TABLE,TABLE,counter,Whole-table reference used by COUNT(*),P3
+STG.STG_CARD_TX.*,*,TABLE,TABLE,counter,Whole-table reference used by COUNT(*),P4
+RISK_MART.RWA.*,*,TABLE,TABLE,counter,Whole-table reference used by COUNT(*),P3
+STG.STG_ACCOUNT.ACCOUNT_ID,ACCOUNT_ID,COLUMN,NUMBER(12),identifier,Pass-through of an identifier column,P1
+STG.STG_ACCOUNT.PRODUCT_CODE,PRODUCT_CODE,COLUMN,VARCHAR(6),category,Normalised copy of a low-cardinality code,P1
+STG.STG_ACCOUNT.BALANCE,BALANCE,COLUMN,"NUMBER(18,2)",amount,Pass-through of a monetary amount,P1
+STG.STG_ACCOUNT.CURRENCY,CURRENCY,COLUMN,VARCHAR(3),currency_code,Normalised 3-letter currency code,P1
+STG.STG_LOAN.LOAN_ID,LOAN_ID,COLUMN,NUMBER(12),identifier,Pass-through of an identifier column,P1
+STG.STG_LOAN.CUSTOMER_ID,CUSTOMER_ID,COLUMN,NUMBER(10),identifier,Pass-through of an identifier column,P1
+STG.STG_LOAN.DRAWN_AMOUNT,DRAWN_AMOUNT,COLUMN,"NUMBER(18,2)",amount,Pass-through of a monetary amount,P1
+STG.STG_LOAN.UNDRAWN_AMOUNT,UNDRAWN_AMOUNT,COLUMN,"NUMBER(18,2)",amount,Pass-through of a monetary amount,P1
+STG.STG_LOAN.ASSET_CLASS,ASSET_CLASS,COLUMN,VARCHAR(12),category,Pass-through of a low-cardinality code,P1
+STG.STG_CUSTOMER.CUSTOMER_ID,CUSTOMER_ID,COLUMN,NUMBER(10),identifier,Pass-through of an identifier column,P1
+STG.STG_CUSTOMER.SEGMENT_CODE,SEGMENT_CODE,COLUMN,VARCHAR(4),category,Pass-through of a low-cardinality code,P1
+STG.STG_CUSTOMER.ONBOARDING_DATE,ONBOARDING_DATE,COLUMN,DATE,date,Pass-through of a DATE column,P1
+STG.STG_RATING.INTERNAL_RATING,INTERNAL_RATING,COLUMN,NUMBER(2),rating,Pass-through of an ordinal rating,P2
+STG.STG_RATING.PD,PD,COLUMN,"NUMBER(9,8)",probability,"Pass-through of a probability in [0,1]",P2
+STG.STG_RISK_WEIGHT.RISK_WEIGHT,RISK_WEIGHT,COLUMN,"NUMBER(5,2)",rate,Pass-through of a regulatory weight,P2
+STG.STG_CARD_TX.CUSTOMER_ID,CUSTOMER_ID,COLUMN,NUMBER(10),identifier,Pass-through of an identifier column,P4
+STG.STG_CARD_TX.AMOUNT,AMOUNT,COLUMN,"NUMBER(12,2)",amount,Pass-through of a monetary amount,P4
+STG.STG_CARD_TX.MCC,MCC,COLUMN,VARCHAR(4),category,Pass-through of a merchant category code,P4
+STG.STG_CARD_TX.CHANNEL,CHANNEL,COLUMN,VARCHAR(10),category,Pass-through of a low-cardinality text,P4
+STG.STG_CARD_TX.TX_DATE,TX_DATE,COLUMN,DATE,date,Pass-through of a DATE column,P4
+RISK_MART.EXPOSURE.LOAN_ID,LOAN_ID,COLUMN,NUMBER(12),identifier,Pass-through of an identifier column,P2
+RISK_MART.EXPOSURE.CUSTOMER_ID,CUSTOMER_ID,COLUMN,NUMBER(10),identifier,Pass-through of an identifier column,P2
+RISK_MART.EXPOSURE.ASSET_CLASS,ASSET_CLASS,COLUMN,VARCHAR(12),category,Pass-through of a low-cardinality code,P2
+RISK_MART.EXPOSURE.EAD,EAD,COLUMN,"NUMBER(18,2)",amount,Computed monetary amount (exposure at default),P2
+RISK_MART.EXPOSURE.RATING_BUCKET,RATING_BUCKET,COLUMN,VARCHAR(6),category,CASE WHEN output with 3 fixed labels (LOW/MEDIUM/HIGH),P2
+RISK_MART.EXPOSURE.EXPOSURE_ADJ_LEGACY,EXPOSURE_ADJ_LEGACY,COLUMN,"NUMBER(18,2)",amount,Computed monetary amount; legacy adjustment factor,P2
+RISK_MART.RWA.LOAN_ID,LOAN_ID,COLUMN,NUMBER(12),identifier,Pass-through of an identifier column,P2
+RISK_MART.RWA.ASSET_CLASS,ASSET_CLASS,COLUMN,VARCHAR(12),category,Pass-through of a low-cardinality code,P2
+RISK_MART.RWA.RATING_BUCKET,RATING_BUCKET,COLUMN,VARCHAR(6),category,Pass-through of a 3-label bucket,P2
+RISK_MART.RWA.RWA_AMOUNT,RWA_AMOUNT,COLUMN,"NUMBER(18,2)",amount,Product of an amount and a weight (risk-weighted assets),P2
+REG_MART.SOLVENCY.REPORTING_CURRENCY,REPORTING_CURRENCY,COLUMN,VARCHAR(3),constant,Single distinct value 'EUR' propagated from a literal,P3
+REG_MART.SOLVENCY.TOTAL_RWA,TOTAL_RWA,COLUMN,"NUMBER(20,2)",amount,SUM aggregation of a monetary amount,P3
+REG_MART.SOLVENCY.TOTAL_EAD,TOTAL_EAD,COLUMN,"NUMBER(20,2)",amount,SUM aggregation of a monetary amount,P3
+REG_MART.SOLVENCY.RWA_HIGH_BUCKET_SHARE,RWA_HIGH_BUCKET_SHARE,COLUMN,"NUMBER(9,8)",ratio,"Ratio of two SUM aggregations; values within [0,1]",P3
+REG_MART.SOLVENCY.LOAN_COUNT,LOAN_COUNT,COLUMN,NUMBER(12),counter,COUNT(*) over a whole table,P3
+REG_MART.BALANCE_SHEET.REPORTING_CURRENCY,REPORTING_CURRENCY,COLUMN,VARCHAR(3),constant,Single distinct value 'EUR' propagated from a literal,P3
+REG_MART.BALANCE_SHEET.PRODUCT_CODE,PRODUCT_CODE,COLUMN,VARCHAR(6),category,Grouping key copied from a low-cardinality code,P3
+REG_MART.BALANCE_SHEET.TOTAL_BALANCE_EUR,TOTAL_BALANCE_EUR,COLUMN,"NUMBER(20,2)",amount,SUM aggregation of a monetary amount,P3
+REG_MART.BALANCE_SHEET.ACCOUNT_COUNT,ACCOUNT_COUNT,COLUMN,NUMBER(12),counter,COUNT(*) over a whole table,P3
+BI_MART.EXPENSE.CUSTOMER_ID,CUSTOMER_ID,COLUMN,NUMBER(10),identifier,Pass-through of an identifier column,P4
+BI_MART.EXPENSE.CUSTOMER_SEGMENT,CUSTOMER_SEGMENT,COLUMN,VARCHAR(4),category,Pass-through of a low-cardinality code,P4
+BI_MART.EXPENSE.SPEND_CATEGORY,SPEND_CATEGORY,COLUMN,VARCHAR(12),category,CASE WHEN output with fixed labels,P4
+BI_MART.EXPENSE.MONTHLY_SPEND,MONTHLY_SPEND,COLUMN,"NUMBER(14,2)",amount,SUM aggregation of a monetary amount grouped by month,P4
+BI_MART.EXPENSE.TX_COUNT,TX_COUNT,COLUMN,NUMBER(12),counter,COUNT(*) over a whole table,P4
+ML_FEAT.CHURN.CUSTOMER_ID,CUSTOMER_ID,COLUMN,NUMBER(10),identifier,Pass-through of an identifier column,P4
+ML_FEAT.CHURN.TENURE_MONTHS,TENURE_MONTHS,COLUMN,NUMBER(4),duration,DATEDIFF in months from a DATE column,P4
+ML_FEAT.CHURN.AVG_BALANCE,AVG_BALANCE,COLUMN,"NUMBER(18,2)",amount,AVG aggregation of a monetary amount,P4
+ML_FEAT.CHURN.NUM_ACCOUNTS,NUM_ACCOUNTS,COLUMN,NUMBER(3),counter,COUNT(DISTINCT id) aggregation,P4
+ML_FEAT.CHURN.CARD_ACTIVITY_FLAG,CARD_ACTIVITY_FLAG,COLUMN,NUMBER(1),flag,CASE WHEN output with values 0/1,P4
+ML_FEAT.CHURN.CHURN_RISK_FLAG,CHURN_RISK_FLAG,COLUMN,NUMBER(1),flag,CASE WHEN output with values 0/1,P4
+MKT_STG.PROMO.TARGET_SEGMENT,TARGET_SEGMENT,COLUMN,VARCHAR(4),category,Pass-through of a low-cardinality code,P5
+MKT_STG.PROMO.PROMO_SCORE,PROMO_SCORE,COLUMN,"NUMBER(5,4)",score,"CASE WHEN output with numeric labels in [0,1]",P5
+LEGACY_RPT.BRANCH_SUMMARY.BRANCH_ID,BRANCH_ID,COLUMN,NUMBER(6),identifier,Pass-through of an identifier column,P5
+LEGACY_RPT.BRANCH_SUMMARY.NET_POSITION,NET_POSITION,COLUMN,"NUMBER(18,2)",amount,Difference of two monetary amounts,P5

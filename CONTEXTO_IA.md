@@ -1,0 +1,88 @@
+# Contexto para IA — léeme primero
+
+> Si eres una IA (u otra persona) que retoma este proyecto sin haber visto la conversación original, este documento te da todo el contexto operativo que necesitas. Los demás `.md` del proyecto son la fuente de verdad del contenido; este fichero es el mapa y las reglas para moverte entre ellos.
+
+## Misión
+
+Construir una **demo genérica y reutilizable de data lineage sobre Neo4j para Financial Services**: un dataset sintético + queries Cypher/GDS + una perspectiva de Bloom que, juntos, respondan a 5 preguntas de negocio típicas de un cliente bancario (ver "Los 5 ángulos" en `README.md`). La demo debe poder presentarse a cualquier cliente del sector sin modificaciones salvo una capa de personalización deliberada.
+
+## Restricciones duras (no negociables salvo que la persona lo pida explícitamente)
+
+1. **Cero referencias a clientes concretos.** Ningún nombre de empresa, persona, fecha de reunión o captura de pantalla de un cliente real debe aparecer en ningún fichero de este proyecto. Si se detecta alguna, es un error a corregir, no una decisión de diseño.
+2. **Idioma**: todos los identificadores del modelo de datos (labels de nodo, tipos de relación, nombres de propiedad) van **en inglés**. La prosa de los `.md` (explicaciones, narrativa, comentarios) va **en español**, salvo que la persona indique lo contrario.
+3. **`Column` y `TRANSFORMS_TO` no se modifican.** Están inspirados en un patrón real de linaje visto en un cliente bancario (detalle en `data-model/NOTAS_DISENO.md`) y son el ancla de credibilidad de toda la demo ("esto ya lo hemos visto funcionar"). Cualquier cambio en sus propiedades o semántica rompe esa credibilidad.
+4. **Nada de lo que hay en este proyecto se ha ejecutado contra una instancia Neo4j real** (el entorno donde se generó no tiene Neo4j ni GDS disponibles). Todo Cypher, especialmente las queries de GDS, debe tratarse como "a validar" hasta que alguien lo pruebe en Aura o Desktop real. No asumir que algo funciona solo porque la sintaxis parece correcta.
+5. **El dataset es y debe seguir siendo sintético.** No rellenar `data/` con datos reales de ningún cliente, aunque se tenga acceso a ellos para otra tarea.
+
+## Estado exacto del proyecto ahora mismo
+
+| Fichero/carpeta | Estado | Contenido |
+|---|---|---|
+| `README.md` | ✅ completo | Qué es, por qué un grafo, los 5 ángulos, estructura, estado |
+| `data-model/SCHEMA.md` | ✅ completo | Los 6 tipos de nodo y 5 tipos de relación, con propiedades en inglés |
+| `data-model/NOTAS_DISENO.md` | ✅ completo | Por qué cada decisión de modelado, qué es real vs sintético, fuentes |
+| `RUNBOOK_DEMO.md` | 🟡 parcial | Estructura y timing de 1h + comandos exactos de los bloques 1, 2, 3 y 5; el bloque Bloom sigue pendiente |
+| `data/` | ✅ completo (sin validar en Neo4j) | 10 CSV, `00_load_live.cypher` (segmentos P0–P5), `generate_dataset.py` (fuente de verdad) y `validate_dataset.py` (consistencia OK) |
+| `queries/` | ✅ completo (sin validar en Neo4j) | `01_ingesta.cypher`, `02_impacto.cypher`, `03_zonas_muertas_gds.cypher`, `04_productivizacion.md` |
+| `AURA_SETUP.md` | ✅ completo (sin validar en Aura) | Requisitos de Aura, parámetros del Query tool (`baseUrl`, `sessionName`, `sessionMemory`, `sessionTtl`, `sessionId`), flujo de sesión AGA, problemas típicos |
+| `bloom/` | ⏳ solo README con el plan | Falta la guía, el guion de escenas y el JSON de perspectiva |
+
+## Próximos pasos, en orden, con criterio de aceptación
+
+### 1. Dataset sintético (`data/`) — ✅ HECHO
+Incluye (todo verificado por `data/validate_dataset.py`), como mínimo, para que las queries de los pasos siguientes tengan algo real que mostrar:
+- Al menos 2 proyectos ETL (`EtlJob`) distintos cuya salida de uno sea entrada del otro (auto-conexión entre proyectos vía un `fqn` de `Column` compartido) — es el argumento de venta más fuerte del modelo.
+- Al menos un caso de `kind = "CONSTANT"` (valor fijo sin columna de origen) y uno de `kind = "TABLE"` (referencia a tabla completa, ej. `COUNT(*)`).
+- Al menos un caso de fórmula multi-origen (`CASE WHEN` con 2-3 columnas de entrada → misma `transformation_expression` en N relaciones `TRANSFORMS_TO`).
+- Al menos 2-3 "zonas muertas" deliberadas — y al menos una debe ser una **rama que se bifurca de un dato vivo** (no solo un nodo totalmente aislado), para demostrar que la detección funciona a nivel de ruta, no solo de componente conexo.
+- Consistencia estricta: todo valor de `TRANSFORMS_TO.scenario` debe tener un `EtlJob.name` correspondiente; todo `Column` debe colgar de al menos un `SourceSystem` vía `HOSTS`.
+- Verificar con un script (Python u otro) que no queden referencias huérfanas antes de dar el dataset por bueno.
+
+### 2. Queries (`queries/`) — ✅ HECHO (pendiente de validar en Neo4j/GDS real)
+- `01_ingesta.cypher`: patrón `MERGE` idempotente por `fqn`/`id`, pensado para ejecutarse en vivo y demostrar la auto-conexión del punto anterior.
+- `02_impacto.cypher`: camino variable ascendente y descendente por `fqn`, más una query de centralidad (qué columnas/sistemas tienen más dependientes).
+- `03_zonas_muertas_gds.cypher`: proyección GDS + BFS en reversa desde `FinalConsumer`, **más un fallback en Cypher puro** (`NOT EXISTS` de alcanzabilidad) por si GDS falla o no está disponible en el entorno de la demo.
+- `04_productivizacion.md`: no es Cypher ejecutable — son buenas prácticas (ingesta idempotente, separación de la capa semántica, informe periódico de zonas muertas) con 1-2 queries de ejemplo.
+
+### 3. Bloom (`bloom/`) — ⏳ PENDIENTE (siguiente paso)
+- Solo tiene sentido después del dataset y las queries, porque las scene actions y search phrases dependen de los valores reales del dataset.
+- Seguir el formato de "guion en actos con talking points entre comillas" descrito en `data-model/NOTAS_DISENO.md` (inspirado en `BLOOM_DEMO_FLOW.md` del repo de referencia).
+
+### 4. Cerrar `RUNBOOK_DEMO.md` — 🟡 parcial (falta el bloque Bloom)
+- Una vez existan queries y escenas concretas, sustituir las descripciones genéricas de cada bloque por los comandos/acciones exactas a ejecutar.
+
+## Mapa de ficheros
+
+```
+data-lineage-fs-demo/
+├── CONTEXTO_IA.md          ← este fichero (léelo primero)
+├── README.md               ← punto de entrada para humanos: qué es y por qué
+├── RUNBOOK_DEMO.md          ← guion de la demo de 1h
+├── AURA_SETUP.md            ← la demo se hace en Aura: `baseUrl` = GitHub raw, y parámetros de Aura Graph Analytics (GDS serverless)
+├── .gitignore               ← NO añadir reglas amplias (`*.csv`, `*.json`): romperían la carga desde GitHub y la perspectiva de Bloom
+├── data-model/
+│   ├── SCHEMA.md            ← fuente de verdad del modelo de datos
+│   └── NOTAS_DISENO.md      ← por qué el modelo es así, fuentes, qué es sintético
+├── data/
+│   ├── README.md            ← qué contiene el dataset, qué casos cubre, cómo cargarlo
+│   ├── *.csv                ← 10 CSV (nodos y relaciones); columna auxiliar `load_batch` NO va al grafo
+│   ├── 00_load_live.cypher  ← LOAD CSV segmentado por proyecto (P1..P5)
+│   ├── generate_dataset.py  ← fuente de verdad: editar AQUÍ y regenerar los CSV
+│   └── validate_dataset.py  ← integridad referencial + criterios de aceptación
+├── queries/
+│   ├── README.md
+│   ├── 01_ingesta.cypher · 02_impacto.cypher · 03_zonas_muertas_gds.cypher
+│   └── 04_productivizacion.md
+└── bloom/README.md          ← plan de Bloom (pendiente de construir)
+```
+
+## Fuentes de inspiración (resumen — detalle completo en `data-model/NOTAS_DISENO.md`)
+
+- Repo [`neo4j-data-asset-intelligence-graph`](https://github.com/halftermeyer/neo4j-data-asset-intelligence-graph): de aquí se copia la **estructura** (no el dominio — es un hedge fund, no un banco): README con el problema de negocio primero, `SCHEMA.md` separado, queries organizadas por ángulo de negocio, y un guion de Bloom en "actos".
+- Artículo de LinkedIn de Michael Down sobre Neo4j y BCBS 239: de aquí se copia el **framing regulatorio** (por qué un grafo encaja mejor que un modelo relacional para lineage en banca) usado como narrativa de apertura y cierre de la demo.
+
+## Cómo verificar que un cambio no rompe nada
+
+1. `grep -ri` en todo el proyecto por nombres propios de cualquier cliente conocido — debe salir limpio.
+2. Si se toca `data-model/SCHEMA.md`, revisar que `RUNBOOK_DEMO.md`, `data/README.md` y `queries/README.md` sigan usando los mismos nombres de nodo/relación — están escritos para mantenerse sincronizados a mano, no hay generación automática.
+3. Cualquier Cypher nuevo se marca como no validado hasta que se ejecute en una instancia Neo4j real — decirlo explícitamente en el propio fichero o en el commit/mensaje de entrega.

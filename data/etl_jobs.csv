@@ -1,0 +1,14 @@
+id,name,frequency,owning_team,estimated_compute_cost,status,load_batch
+J01,LOAD_CORE_ACCOUNTS,Daily,Core Data Engineering,118000,Active,P1
+J02,LOAD_CORE_LOANS,Daily,Core Data Engineering,96000,Active,P1
+J03,LOAD_CRM_CUSTOMERS,Daily,Core Data Engineering,64000,Active,P1
+J04,LOAD_RISK_RATINGS,Daily,Risk Analytics Engineering,71000,Active,P2
+J05,CALC_EXPOSURE,Daily,Risk Analytics Engineering,185000,Active,P2
+J06,CALC_RWA,Daily,Risk Analytics Engineering,142000,Active,P2
+J07,BUILD_COREP_SOLVENCY,Weekly batch,Regulatory Reporting Office,58000,Active,P3
+J08,BUILD_FINREP_BALANCE,Weekly batch,Regulatory Reporting Office,47000,Active,P3
+J09,LOAD_CARD_TRANSACTIONS,Real-time,Data Platform Team,210000,Active,P4
+J10,BUILD_EXPENSE_DASHBOARD,Daily,Retail Analytics,52000,Active,P4
+J11,BUILD_CHURN_FEATURES,Weekly batch,Retail Analytics,89000,Active,P4
+J12,PROMO_SEGMENT_EXTRACT,Weekly batch,Marketing Data Team,42000,Active,P5
+J13,LEGACY_BRANCH_REPORT,Daily,Legacy Applications Support,85000,Deprecated,P5

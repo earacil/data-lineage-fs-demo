@@ -1,0 +1,64 @@
+# ---------------------------------------------------------------------------
+# Secretos y credenciales (NUNCA al repositorio — el repo es público para que
+# Aura pueda leer los CSV por https://raw.githubusercontent.com/...)
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+# Fichero que descarga Aura al crear una instancia (usuario/contraseña/URI)
+Neo4j-*.txt
+# Credenciales de la Aura API (client id / secret) si se guardan en fichero
+aura-api-*.json
+aura-api-*.txt
+*credentials*.json
+*client_secret*
+
+# ---------------------------------------------------------------------------
+# Sistema operativo
+# ---------------------------------------------------------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+Desktop.ini
+
+# ---------------------------------------------------------------------------
+# Python (data/generate_dataset.py, data/validate_dataset.py)
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# ---------------------------------------------------------------------------
+# Editores / IDE
+# ---------------------------------------------------------------------------
+.idea/
+*.swp
+*.swo
+*~
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ---------------------------------------------------------------------------
+# Artefactos locales de Neo4j (Desktop / Docker) y salidas temporales
+# ---------------------------------------------------------------------------
+neo4j-home/
+neo4j-data/
+neo4j-logs/
+*.dump
+*.log
+tmp/
+*.tmp
+
+# ---------------------------------------------------------------------------
+# NO ignorar (comentario deliberado): data/*.csv, queries/*.cypher y
+# bloom/*.json (perspectiva de Bloom) deben versionarse. No añadir reglas
+# amplias como `*.csv` o `*.json`: romperían la carga desde GitHub.
+# ---------------------------------------------------------------------------

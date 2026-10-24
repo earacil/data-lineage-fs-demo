@@ -11,7 +11,7 @@ Construir una **demo genérica y reutilizable de data lineage sobre Neo4j para F
 1. **Cero referencias a clientes concretos.** Ningún nombre de empresa, persona, fecha de reunión o captura de pantalla de un cliente real debe aparecer en ningún fichero de este proyecto. Si se detecta alguna, es un error a corregir, no una decisión de diseño.
 2. **Idioma**: todos los identificadores del modelo de datos (labels de nodo, tipos de relación, nombres de propiedad) van **en inglés**. La prosa de los `.md` (explicaciones, narrativa, comentarios) va **en español**, salvo que la persona indique lo contrario.
 3. **`Column` y `TRANSFORMS_TO` no se modifican.** Están inspirados en un patrón real de linaje visto en un cliente bancario (detalle en `data-model/NOTAS_DISENO.md`) y son el ancla de credibilidad de toda la demo ("esto ya lo hemos visto funcionar"). Cualquier cambio en sus propiedades o semántica rompe esa credibilidad.
-4. **Nada de lo que hay en este proyecto se ha ejecutado contra una instancia Neo4j real** (el entorno donde se generó no tiene Neo4j ni GDS disponibles). Todo Cypher, especialmente las queries de GDS, debe tratarse como "a validar" hasta que alguien lo pruebe en Aura o Desktop real. No asumir que algo funciona solo porque la sintaxis parece correcta.
+4. **Sólo `data/00_load_live.cypher` se ha ejecutado contra una instancia real (Aura, 24-oct-2026, resultado correcto).** El resto del proyecto (`queries/`, `AURA_SETUP.md`, partes GDS) no: el entorno donde se generó no tiene Neo4j ni GDS disponibles. Todo Cypher, especialmente las queries de GDS, debe tratarse como "a validar" hasta que alguien lo pruebe en Aura o Desktop real. No asumir que algo funciona solo porque la sintaxis parece correcta.
 5. **El dataset es y debe seguir siendo sintético.** No rellenar `data/` con datos reales de ningún cliente, aunque se tenga acceso a ellos para otra tarea.
 
 ## Estado exacto del proyecto ahora mismo
@@ -22,7 +22,7 @@ Construir una **demo genérica y reutilizable de data lineage sobre Neo4j para F
 | `data-model/SCHEMA.md` | ✅ completo | Los 6 tipos de nodo y 5 tipos de relación, con propiedades en inglés |
 | `data-model/NOTAS_DISENO.md` | ✅ completo | Por qué cada decisión de modelado, qué es real vs sintético, fuentes |
 | `RUNBOOK_DEMO.md` | 🟡 parcial | Estructura y timing de 1h + comandos exactos de los bloques 1, 2, 3 y 5; el bloque Bloom sigue pendiente |
-| `data/` | ✅ completo (sin validar en Neo4j) | 10 CSV, `00_load_live.cypher` (segmentos P0–P5), `generate_dataset.py` (fuente de verdad) y `validate_dataset.py` (consistencia OK) |
+| `data/` | ✅ completo; **`00_load_live.cypher` validado en Aura el 24-oct-2026** (recuentos 81/7/13/6/7 y 66/81/113/25/14 correctos) | 10 CSV, `00_load_live.cypher` (segmentos P0–P5), `generate_dataset.py` (fuente de verdad) y `validate_dataset.py` (consistencia OK) |
 | `queries/` | ✅ completo (sin validar en Neo4j) | `01_ingesta.cypher`, `02_impacto.cypher`, `03_zonas_muertas_gds.cypher`, `04_productivizacion.md` |
 | `AURA_SETUP.md` | ✅ completo (sin validar en Aura) | Requisitos de Aura, parámetros del Query tool (`baseUrl`, `sessionName`, `sessionMemory`, `sessionTtl`, `sessionId`), flujo de sesión AGA, problemas típicos |
 | `bloom/` | ⏳ solo README con el plan | Falta la guía, el guion de escenas y el JSON de perspectiva |

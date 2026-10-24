@@ -2,7 +2,8 @@
 
 > Todo el contenido es **sintético**: una historia plausible de banca construida para que los 5 ángulos de la demo tengan sentido. No representa a ningún cliente real.
 >
-> ⚠️ El script de carga (`00_load_live.cypher`) **no se ha ejecutado contra una instancia Neo4j real** (ver `../CONTEXTO_IA.md`, restricción 4). Lo único comprobado es la consistencia de los CSV con `validate_dataset.py`.
+> ✅ **Validado en Aura (24-oct-2026):** `00_load_live.cypher` cargado desde GitHub (`baseUrl` = raw.githubusercontent.com) y el bloque de verificación devolvió exactamente los recuentos esperados (81 / 7 / 13 / 6 / 7 nodos; 66 / 81 / 113 / 25 / 14 aristas). Los CSV, además, pasan `validate_dataset.py`.
+> ⚠️ Siguen **sin validar** en Aura las queries de `../queries/` (ver `../CONTEXTO_IA.md`, restricción 4).
 
 Formato: **CSV + script de carga `LOAD CSV`** segmentado por proyecto, pensado para narrarse en vivo. Nombres de nodo/relación/propiedad en inglés, tal como en `../data-model/SCHEMA.md`.
 
@@ -61,7 +62,7 @@ Resultado esperado de la detección de zonas muertas: **8 columnas muertas, 2 jo
 ## Cómo cargar
 
 1. Elegir dónde se leen los CSV (detalle y problemas típicos en [`../AURA_SETUP.md`](../AURA_SETUP.md)):
-   - **Aura (caso de la demo):** los CSV se leen de GitHub (repo público): `:param baseUrl => 'https://raw.githubusercontent.com/<owner>/<repo>/<ref>/data/'` — con `/` final; mejor una etiqueta o SHA que `main` por la caché de `raw.githubusercontent.com`.
+   - **Aura (caso de la demo):** los CSV se leen de GitHub (repo público): `:param baseUrl => 'https://raw.githubusercontent.com/earacil/data-lineage-fs-demo/main/data/'` — con `/` final; mejor una etiqueta o SHA que `main` por la caché de `raw.githubusercontent.com`.
    - **Neo4j Desktop / Docker / local:** copiar los `*.csv` a la carpeta `import/` de la instancia y `:param baseUrl => 'file:///'`.
 2. Ejecutar `00_load_live.cypher` por segmentos, en orden (0 → P1 → … → P5). Cada segmento es idempotente.
 3. El último bloque del script devuelve los recuentos esperados (81 / 7 / 13 / 6 / 7 nodos; 66 / 81 / 113 / 25 / 14 aristas).

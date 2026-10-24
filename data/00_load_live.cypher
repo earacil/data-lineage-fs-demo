@@ -2,19 +2,13 @@
 // 00_load_live.cypher — carga del dataset sintético, segmentada por proyecto ETL
 // Demo de Data Lineage para Financial Services · Neo4j 5.x
 //
-// ⚠️  NO VALIDADO contra una instancia Neo4j real hasta que alguien lo ejecute en Aura/Desktop
-//     (ver CONTEXTO_IA.md, restricción 4). Tratar como "a validar".
+// ✅ VALIDADO en Aura (24-oct-2026): la carga completa desde GitHub y el bloque de verificación final
+//    devolvieron los recuentos esperados. (Las queries de ../queries/ siguen sin validar.)
 //
 // CÓMO USARLO (detalle completo en ../AURA_SETUP.md)
-//   1. Define de dónde se leen los CSV (una sola vez por sesión del Query tool; cada :param se ejecuta
-//      por separado y NO sobrevive a un refresco de la página):
-//        Aura (caso de esta demo): los CSV se leen de GitHub. El repositorio debe ser público.
-//            :param baseUrl => 'https://raw.githubusercontent.com/<owner>/<repo>/<ref>/data/'
-//            (con la `/` final; <ref> = rama, o mejor etiqueta/SHA para evitar la caché de raw.githubusercontent.com)
-//        Neo4j Desktop / Docker / local (alternativa): copiar data/*.csv a la carpeta `import/` y usar
-//            :param baseUrl => 'file:///'
-//      Prueba de humo (debe devolver 7):
-//            LOAD CSV WITH HEADERS FROM $baseUrl + 'owners.csv' AS row RETURN count(row);
+//   1. Ejecuta el PASO 0 (más abajo): define `baseUrl` — ya apuntando a GitHub, listo para copiar y pegar.
+//      El comando `:param` se ejecuta SOLO y no sobrevive a un refresco de la página. El repo debe ser público.
+//      (Alternativa local — Desktop/Docker: copiar data/*.csv a `import/` y usar `:param baseUrl => 'file:///'`)
 //   2. Ejecuta el segmento 0 (restricciones + datos maestros) y luego los segmentos P1..P5 EN ORDEN,
 //      narrando cada uno. Cada segmento es idempotente (MERGE): se puede repetir sin duplicar.
 //      Si el editor sólo ejecuta una sentencia por vez, ve sentencia a sentencia (separadas por `;`).
@@ -29,6 +23,23 @@
 //
 // COLUMNAS AUXILIARES `load_batch`: sólo sirven para segmentar la carga; no se guardan en el grafo.
 // =====================================================================================
+
+
+// -------------------------------------------------------------------------------------
+// PASO 0 · Parámetro `baseUrl` (CSV en GitHub) — ya apunta al repo de la demo, no hay que editarlo
+//
+// ⚠️  `:param` es un comando del Query tool, NO Cypher: ejecútalo SOLO (una ejecución para esta línea,
+//     no mezclado con las sentencias de abajo). Se pierde al refrescar la página o cambiar de instancia:
+//     comprueba con `:params` y vuelve a ejecutarlo si hace falta.
+// Para fijar una versión estable en la demo, sustituye `main` por una etiqueta/SHA (ver AURA_SETUP.md §3).
+// -------------------------------------------------------------------------------------
+
+:param baseUrl => 'https://raw.githubusercontent.com/earacil/data-lineage-fs-demo/main/data/';
+
+// Prueba de humo (ejecutar sola; debe devolver 7)
+LOAD CSV WITH HEADERS FROM $baseUrl + 'owners.csv' AS row
+RETURN count(row) AS owners;
+
 
 
 // -------------------------------------------------------------------------------------
@@ -406,15 +417,25 @@ MERGE (j)-[:MAINTAINED_BY]->(o);
 // 7 Owner · 66 TRANSFORMS_TO · 81 HOSTS · 113 PROCESSES · 25 FEEDS · 14 MAINTAINED_BY)
 // -------------------------------------------------------------------------------------
 
-CALL { MATCH (n:Column) RETURN 'Column' AS item, count(n) AS total
-  UNION ALL MATCH (n:SourceSystem) RETURN 'SourceSystem', count(n)
-  UNION ALL MATCH (n:EtlJob) RETURN 'EtlJob', count(n)
-  UNION ALL MATCH (n:FinalConsumer) RETURN 'FinalConsumer', count(n)
-  UNION ALL MATCH (n:Owner) RETURN 'Owner', count(n)
-  UNION ALL MATCH ()-[r:TRANSFORMS_TO]->() RETURN 'TRANSFORMS_TO', count(r)
-  UNION ALL MATCH ()-[r:HOSTS]->() RETURN 'HOSTS', count(r)
-  UNION ALL MATCH ()-[r:PROCESSES]->() RETURN 'PROCESSES', count(r)
-  UNION ALL MATCH ()-[r:FEEDS]->() RETURN 'FEEDS', count(r)
-  UNION ALL MATCH ()-[r:MAINTAINED_BY]->() RETURN 'MAINTAINED_BY', count(r)
+CALL () {
+  MATCH (n:Column) RETURN 'Column' AS item, count(n) AS total
+  UNION ALL
+  MATCH (n:SourceSystem) RETURN 'SourceSystem' AS item, count(n) AS total
+  UNION ALL
+  MATCH (n:EtlJob) RETURN 'EtlJob' AS item, count(n) AS total
+  UNION ALL
+  MATCH (n:FinalConsumer) RETURN 'FinalConsumer' AS item, count(n) AS total
+  UNION ALL
+  MATCH (n:Owner) RETURN 'Owner' AS item, count(n) AS total
+  UNION ALL
+  MATCH ()-[r:TRANSFORMS_TO]->() RETURN 'TRANSFORMS_TO' AS item, count(r) AS total
+  UNION ALL
+  MATCH ()-[r:HOSTS]->() RETURN 'HOSTS' AS item, count(r) AS total
+  UNION ALL
+  MATCH ()-[r:PROCESSES]->() RETURN 'PROCESSES' AS item, count(r) AS total
+  UNION ALL
+  MATCH ()-[r:FEEDS]->() RETURN 'FEEDS' AS item, count(r) AS total
+  UNION ALL
+  MATCH ()-[r:MAINTAINED_BY]->() RETURN 'MAINTAINED_BY' AS item, count(r) AS total
 }
 RETURN item, total;

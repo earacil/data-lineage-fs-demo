@@ -20,7 +20,7 @@ Define estos parámetros en el **Query tool** de la instancia (Aura Console → 
 
 | Parámetro | Valor para la demo | Para qué | Cuándo |
 |---|---|---|---|
-| `baseUrl` | `'https://raw.githubusercontent.com/<owner>/<repo>/<ref>/data/'` | Ruta base de los CSV en `LOAD CSV` (§3). **Con la `/` final** | Antes de la carga |
+| `baseUrl` | `'https://raw.githubusercontent.com/earacil/data-lineage-fs-demo/main/data/'` | Ruta base de los CSV en `LOAD CSV` (§3). **Con la `/` final** | Antes de la carga |
 | `sessionName` | `'lineage-demo'` | Nombre de la sesión AGA (único en el proyecto) | Antes de `03` |
 | `sessionMemory` | `'2GB'` | Tamaño de la sesión. El grafo proyectado es diminuto (87 nodos), así que 2 GB sobra; `gds.session.estimate` lo confirma | Antes de `03` |
 | `sessionTtl` | `duration({hours: 2})` | Inactividad tras la que la sesión expira. Por defecto 1 h (en Free puede estar limitado a menos) | Antes de `03` |
@@ -30,7 +30,7 @@ Define estos parámetros en el **Query tool** de la instancia (Aura Console → 
 Copia y pega **línea a línea** (una ejecución por línea) en el Query tool:
 
 ```
-:param baseUrl => 'https://raw.githubusercontent.com/<owner>/<repo>/<ref>/data/'
+:param baseUrl => 'https://raw.githubusercontent.com/earacil/data-lineage-fs-demo/main/data/'
 :param sessionName => 'lineage-demo'
 :param sessionMemory => '2GB'
 :param sessionTtl => duration({hours: 2})
@@ -47,11 +47,11 @@ Notas del Query tool:
 Aura **no puede leer `file:///`**: los CSV tienen que estar en una URL `https` pública. Al subir el proyecto a GitHub, la URL base es:
 
 ```
-https://raw.githubusercontent.com/<owner>/<repo>/<ref>/data/
+https://raw.githubusercontent.com/earacil/data-lineage-fs-demo/main/data/
 ```
 
-- `<owner>/<repo>`: tu usuario/organización y el nombre del repositorio.
-- `<ref>`: rama (`main`) o, **mejor para una demo, una etiqueta o un SHA de commit** (p. ej. `v1.0`). `raw.githubusercontent.com` cachea unos minutos, así que si editas los CSV y recargas con `main` puedes leer la versión anterior.
+- Repositorio: `earacil/data-lineage-fs-demo`, rama `main`, carpeta `data/` (equivale a `https://github.com/earacil/data-lineage-fs-demo/tree/main/data`).
+- **Rama vs. etiqueta:** `raw.githubusercontent.com` cachea unos minutos. Si editas los CSV y recargas con `main` puedes leer la versión anterior. Para la demo, mejor fijar una etiqueta o un SHA y sustituir `main` en la URL (p. ej. `.../data-lineage-fs-demo/v1.0/data/`).
 - **El repositorio debe ser público** (Aura no puede autenticarse contra GitHub). El dataset es sintético y no contiene datos de ningún cliente, por lo que es seguro publicarlo; aun así, repasa el punto 1 de "Cómo verificar" en `CONTEXTO_IA.md` antes del primer push.
 - Mantén las rutas de carpeta tal cual: el script espera `columns.csv`, `etl_jobs.csv`, etc. directamente bajo `data/`.
 

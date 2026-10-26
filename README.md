@@ -1,6 +1,6 @@
 # Data Lineage Demo — Financial Services
 
-> Estado: **modelo, dataset sintético y queries (ángulos 1, 2, 3 y 5) escritos. Validados en Aura: carga de datos y `01_ingesta`; pendientes `02` y `03`. Perspectiva Bloom creada en Aura; falta exportarla al repo.**
+> Estado: **modelo, dataset sintético y queries (ángulos 1, 2, 3 y 5) escritos. Validados en Aura: carga de datos, `01_ingesta`, `02_impacto` (salvo la sección 4) y la parte D de `03` vía dashboard; pendiente lo reescrito de GDS en `03`. Perspectiva Bloom exportada; guion en borrador.**
 >
 > **¿Eres una IA retomando este proyecto?** Lee primero [`CONTEXTO_IA.md`](CONTEXTO_IA.md) — tiene las restricciones duras, el estado exacto y los próximos pasos con criterios de aceptación.
 
@@ -25,7 +25,7 @@ Cada uno se corresponde con un fichero de `queries/` o `bloom/`, no con una enti
 1. **Ingesta end-to-end** — cómo cargar, mantener y escalar el grafo a medida que se añaden proyectos/pipelines ETL. → `queries/01_ingesta.cypher`
 2. **Impacto ascendente/descendente** — Cypher de trazado de linaje completo e impacto de un cambio. → `queries/02_impacto.cypher`
 3. **Zonas muertas con GDS** — detección de columnas/jobs que no alimentan ningún consumidor final. → `queries/03_zonas_muertas_gds.cypher`
-4. **Bloom** — visualización y guion de escenas. → `bloom/BLOOM_GUIDE.md` + `bloom/BLOOM_DEMO_FLOW.md`
+4. **Bloom** — visualización y guion de escenas. → `bloom/BLOOM_GUIDE.md` + `bloom/BLOOM_DEMO_FLOW.md` (+ perspectiva exportada)
 5. **Productivización** — buenas prácticas de ingesta idempotente, propiedad y monitorización continua. → `queries/04_productivizacion.md`
 
 ## Estructura del proyecto
@@ -41,8 +41,8 @@ data-lineage-fs-demo/
 │   └── NOTAS_DISENO.md            ← decisiones de diseño, qué es sintético, fuentes
 ├── data/                          ← CSVs del dataset sintético, script de carga `LOAD CSV`, generador y validador
 ├── queries/                       ← .cypher por ángulo de negocio + nota de productivización
-├── dashboard/                     ← export del dashboard de Aura (resumen agregado de impacto)
-└── bloom/                         ← perspectiva (creada en Aura, pendiente de exportar), guía y guion de escenas
+├── dashboards/                    ← exports de los dashboards de Aura (impacto y zonas muertas) + DASHBOARDS_GUIDE.md
+└── bloom/                         ← perspectiva exportada de Aura, guía y guion de escenas
 ```
 
 ## Estado actual / próximos pasos
@@ -50,13 +50,15 @@ data-lineage-fs-demo/
 - [x] Modelo de datos diseñado (6 tipos de nodo)
 - [x] Estructura de carpetas y documentación base
 - [x] Generar dataset sintético multi-proyecto (CSV + LOAD CSV, carga en vivo) — consistencia comprobada con `data/validate_dataset.py`
-- [x] Escribir las 3 queries de los ángulos 1-3 — `01` validada en Aura; `02` y `03` sin validar
+- [x] Escribir las 3 queries de los ángulos 1-3 — `01` y `02` validadas en Aura; `03` validada en parte
 - [x] Escribir nota de productivización (ángulo 5)
-- [x] Dashboard de Aura creado y exportado (`dashboard/`)
+- [x] Dashboard de impacto creado y exportado (`dashboards/`)
 - [x] `02_impacto` validada (la sección 4 queda fuera de la demo)
-- [ ] Validar en Aura `03_zonas_muertas_gds` (incluida la sesión Aura Graph Analytics)
+- [ ] Terminar de validar en Aura `03_zonas_muertas_gds` (lo reescrito de GDS y la parte Z; la parte D ya está validada vía dashboard, salvo D.2/D.3)
+- [x] Dashboard «Data Lineage Dead Zones» creado y exportado (`dashboards/`)
 - [x] Configurar la perspectiva de Bloom en Aura (ángulo 4)
-- [ ] Exportar la perspectiva a `bloom/data_lineage_fs_perspective.json` y escribir guía y guion de escenas
+- [x] Perspectiva exportada a `bloom/data_lineage_fs_perspective.json`; guía y guion redactados (borrador)
+- [ ] Ensayar el bloque Bloom y decidir si la frase `C2` incluye el tramo `HOSTS`
 - [ ] Al preparar esta demo para un cliente concreto: ajustar nombres de sistemas/informes a su contexto real, sin tocar esta versión genérica — crear una copia o una capa de personalización aparte
 
 ## Uso con un cliente concreto

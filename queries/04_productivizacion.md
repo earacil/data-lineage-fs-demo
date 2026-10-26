@@ -129,7 +129,7 @@ Un job **sin dueño y sin consumidores** es el candidato perfecto a retirada; un
 | Consultas de "vivo/muerto" frecuentes | Calcularlas con GDS (BFS en reversa) y **materializar** el resultado si se consulta mucho; es una extensión del modelo, no forma parte de `SCHEMA.md` — decidir explícitamente antes de añadirla |
 | Ciclos | `TRANSFORMS_TO` debe ser un DAG. `data/validate_dataset.py` lo comprueba para el dataset de ejemplo; en producción, validar tras cada carga (un ciclo hace que los `*` recorran caminos sin fin lógico) |
 | Volumen | Los índices vienen de las restricciones de unicidad; medir `PROFILE` de las queries de impacto con datos reales antes de prometer tiempos |
-| GDS (Aura Graph Analytics) | Proyectar sólo `Column` y `FinalConsumer` con `TRANSFORMS_TO`/`FEEDS`; las sesiones son efímeras y se facturan por minuto (mínimo 10 min): en un informe periódico, crear la sesión, ejecutar y borrarla (`gds.session.delete`) en el mismo job. Si la orquestación es externa a Aura, usar el cliente Python con credenciales de la Aura API guardadas en un gestor de secretos |
+| GDS (Aura Graph Analytics) | Proyectar sólo `Column` y `FinalConsumer` con `TRANSFORMS_TO`/`FEEDS`; las sesiones son efímeras y se facturan por minuto (mínimo 10 min): en un informe periódico, proyectar (la sesión implícita se crea sola), ejecutar y borrar las proyecciones (`gds.graph.drop`, que elimina la sesión) en el mismo job. Si la orquestación es externa a Aura, usar el cliente Python con credenciales de la Aura API guardadas en un gestor de secretos |
 
 ---
 

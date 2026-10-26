@@ -27,14 +27,14 @@
 //   3. Blast radius por SourceSystem
 //   4. Casos especiales del modelo: CASE WHEN multi-origen, CONSTANT, TABLE  (material de apoyo, fuera de la demo)
 //   5. Criticidad por alcance: jobs por informes que dependen de ellos (conteo de caminos, no centralidad
-//      GDS; los algoritmos de centralidad reales —PageRank, betweenness— están en 03, parte D)
+//      GDS; los algoritmos de centralidad reales —PageRank, betweenness— están en 03, parte C)
 //   6. Trazabilidad BCBS 239 por informe regulatorio
 //
-// DASHBOARD (Aura Dashboards) — export en dashboard/data_lineage_fs_impact_dashboard.json, título «Data Lineage Impact»
+// DASHBOARD (Aura Dashboards) — export en dashboards/data_lineage_fs_impact_dashboard.json, título «Data Lineage Impact»
 //   Creado y verificado en Aura por el autor el 26-oct-2026. Las queries usadas se marcan con «▣ DASHBOARD».
 //   Idea: Bloom enseña caminos y estructura; el dashboard enseña los AGREGADOS (rankings, tablas) de un vistazo.
 //   Solo Cypher puro. Quedan fuera: las secciones 1 y 2.a (son grafos, para Bloom), la 4 (casos especiales, material
-//   de apoyo) y los algoritmos de 03·D.
+//   de apoyo) y los algoritmos de 03·C.
 //
 //   Tarjetas (según el export):
 //     ▣ «1. Source Systems by Impact» ......... 3.b  Bar chart vertical, valores agrupados
@@ -170,7 +170,7 @@ ORDER BY job;
 // 5. CRITICIDAD POR ALCANCE — dónde duele más que algo falle
 //    Aquí se CUENTA hasta dónde llega cada nodo (fan-out aguas abajo). No es centralidad de grafo:
 //    para "por dónde pasan más caminos" (betweenness) o "de qué depende todo" (PageRank) ver
-//    03_zonas_muertas_gds.cypher, parte D.
+//    03_zonas_muertas_gds.cypher, parte C.
 // -------------------------------------------------------------------------------------
 
 // 5 · Jobs por consumidores finales que dependen de ellos (cuántos informes mueren si ese job se cae)

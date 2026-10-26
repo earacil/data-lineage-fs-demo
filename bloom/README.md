@@ -1,11 +1,11 @@
-# bloom/ (perspectiva creada en Aura; pendiente de exportar)
+# bloom/ (perspectiva exportada de Aura)
 
-**Estado:** la perspectiva de Bloom ya está creada y probada en Aura (confirmado por el autor, 26-oct-2026). Al terminar las pruebas se descargará el fichero de Bloom y se guardará aquí como `data_lineage_fs_perspective.json`; hasta entonces, la guía y el guion no se redactan para no inventar estilos que no coincidan con lo configurado.
+**Estado:** la perspectiva está creada, probada en Aura y exportada (26-oct-2026). La guía y el guion se han redactado a partir del export real.
 
-Ángulo 4 de la demo. Ficheros previstos:
+Ángulo 4 de la demo. Ficheros:
 
-- `BLOOM_GUIDE.md` — estilo de nodo (color/caption por tipo), scene actions (ej. "camino completo de sistema a informe", "¿qué rompe si cambia esto?") y search phrases (ej. "columnas sin informe regulatorio asociado").
-- `BLOOM_DEMO_FLOW.md` — guion en "actos" con narrativa y talking points, mismo formato que el repo de referencia (`BLOOM_DEMO_FLOW.md` de `neo4j-data-asset-intelligence-graph`).
-- `data_lineage_fs_perspective.json` — perspectiva exportable de Bloom, una vez configurada contra el dataset de `data/`.
+- `data_lineage_fs_perspective.json` — perspectiva «Data Lineage FS Perspective» (Bloom 2.21.0): 5 categorías con el estilo por defecto, 5 tipos de relación y 6 search phrases parametrizadas.
+- `BLOOM_GUIDE.md` — qué contiene exactamente el export (estilos, search phrases, equivalencia con las queries de `queries/`), cómo importarlo y qué diferencias hay con el repo.
+- `BLOOM_DEMO_FLOW.md` — guion en 4 actos (≈10 min) construido solo con lo que existe en la perspectiva. Borrador por ensayar.
 
-Pendiente de construir después del dataset y las queries, porque las scene actions dependen del modelo final en `../data-model/SCHEMA.md`.
+**No incluye:** estilo condicional ni scene actions (ver `BLOOM_GUIDE.md`, «Qué NO hay»).

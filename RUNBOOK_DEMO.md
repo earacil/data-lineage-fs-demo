@@ -1,6 +1,6 @@
 # Guion de demo — plantilla genérica (1 hora)
 
-> Estado: bloques 1, 2, 3 y 5 con los comandos exactos. **El bloque Bloom está pendiente de redactar:** la perspectiva ya existe en Aura y se rellenará con `bloom/BLOOM_DEMO_FLOW.md` cuando se exporte. Estructura y timing reutilizables para cualquier cliente de Financial Services.
+> Estado: bloques 1, 2, 3, 4 y 5 con los comandos exactos. **El bloque Bloom es un borrador** construido sobre la perspectiva exportada (`bloom/`), pendiente de ensayo. Estructura y timing reutilizables para cualquier cliente de Financial Services.
 >
 > ⚠️ Todo el Cypher referenciado **no se ha ejecutado contra una instancia Neo4j real** — ensayar entera en el entorno de la demo (Aura/Desktop + GDS) antes de usarla.
 
@@ -16,7 +16,7 @@
 
 ## Preparación (antes de la sesión)
 
-1. Instancia AuraDB con **Aura Graph Analytics activado** (ver `AURA_SETUP.md` §1). Subir el repo a GitHub (público) y fijar en el Query tool los parámetros de `AURA_SETUP.md` §2: `baseUrl` (apuntando a una **etiqueta/SHA**, no a `main`) y `sessionName`, `sessionMemory`, `sessionTtl`. Comprobarlos con `:params` (se pierden al refrescar).
+1. Instancia AuraDB con **Aura Graph Analytics activado** (ver `AURA_SETUP.md` §1). Subir el repo a GitHub (público) y fijar en el Query tool el parámetro `baseUrl` de `AURA_SETUP.md` §2 (apuntando a una **etiqueta/SHA**, no a `main`). Comprobarlos con `:params` (se pierden al refrescar).
 2. **Pre-cargar el segmento 0 y los proyectos P1, P2, P4 y P5** de `data/00_load_live.cypher`, dejando **P3** (reporting regulatorio) para cargarlo en directo, más el proyecto nuevo del bloque B de `01_ingesta.cypher`. Si prefieres una demo más corta, pre-cargar los 5 proyectos y usar sólo el bloque B.
 3. Verificar con el último bloque del script los recuentos esperados (81 / 7 / 13 / 6 / 7 nodos; 66 / 81 / 113 / 25 / 14 aristas) **una vez cargados los 5 proyectos** (ensayar la carga completa antes en una instancia aparte).
 4. Ejecutar una vez entero `queries/01_ingesta.cypher` bloque E (reset) para dejar el grafo sin el proyecto del bloque B.
@@ -40,25 +40,33 @@
 | 4-8 | **2.a** (grafo sistema → informe) y **2.b** (tabla) sobre `Solvency Report` | "De dónde sale un informe regulatorio: qué sistemas y cuántas columnas origen aporta cada uno." |
 | 8-10 | **3.a** (si cae el Core) y **3.b** (ranking de sistemas) | "Blast radius a nivel de sistema." |
 | 10-15 | **5** (jobs por informes que dependen de ellos) y **6.a** (trazabilidad BCBS 239 por informe) | "Dónde duele más que algo falle y cuántos orígenes tiene cada informe regulatorio." |
-| (opcional, 2-3 min) | **Dashboard de Aura** `Data Lineage Impact` (`dashboard/data_lineage_fs_impact_dashboard.json`) con las 5 tarjetas marcadas `▣` en `02_impacto.cypher` (3.b, 3.a con filtro, 5, 6.a, 6.b) | "Lo que acabamos de ver en grafo, resumido en una pantalla." Mejor como cierre del bloque o como material para dejar al cliente que como parte del flujo en vivo |
+| (opcional, 2-3 min) | **Dashboard de Aura** `Data Lineage Impact` (`dashboards/data_lineage_fs_impact_dashboard.json`) con las 5 tarjetas marcadas `▣` en `02_impacto.cypher` (3.b, 3.a con filtro, 5, 6.a, 6.b) | "Lo que acabamos de ver en grafo, resumido en una pantalla." Mejor como cierre del bloque o como material para dejar al cliente que como parte del flujo en vivo |
 
 ### 3 · Zonas muertas con GDS (10 min) — `queries/03_zonas_muertas_gds.cypher`
 
 | Min | Acción | Qué decir |
 |---|---|---|
-| 0-2 | Definir "zona muerta" (sin ruta hasta un `FinalConsumer`) | "No es un flag: se calcula con el grafo." |
-| 2-5 | Parte **A** (A.1 proyección, A.2 BFS en reversa) | Esperado: 8 columnas muertas |
-| 5-6 | Parte **B** (WCC) | "Un componente conexo sólo ve 5 de las 8: la rama que cuelga de un dato vivo no se ve así." |
-| 6-8 | **C.2** (puntos de bifurcación) y **C.4/C.5** (jobs muertos y ahorro) | "127.000 € al año en jobs que nadie consume, uno de ellos deprecado y sin propietario." |
-| 8-10 | **C.6** y **C.7** | "Una columna sobra en un job que sí se queda; un sistema entero al 0 %." |
-| −5 | **Antes del bloque:** parte **0** (crear la sesión AGA y `:param sessionId`) — tarda en pasar a `Ready` | — |
-| +2 (opcional) | Parte **D** (D.1 PageRank, D.2/D.3 betweenness), con la sesión aún viva | "Cypher cuenta hasta dónde llega un dato; el algoritmo dice por dónde pasa todo: CALC_EXPOSURE y CALC_RWA son los cuellos de botella." Aviso: betweenness no distingue vivo de muerto (PROMO_SEGMENT_EXTRACT también puntúa); por eso va después de A |
-| 10 | Parte **Z**: borrar la sesión al terminar (deja de facturar). **Siempre después de D** | — |
-| — | **Plan B si GDS falla:** ir directamente a la parte **C** (mismo resultado en Cypher puro) | — |
+| 0-2 | Definir "muerto": un dato que se carga y se paga pero del que no sale ninguna flecha hasta un informe, dashboard o modelo (`FinalConsumer`) | "No es un flag: se calcula con el grafo. Es un candidato a retirada, no una orden." |
+| 2-5 | Parte **A**: A.1 proyección (crea la sesión), A.2 BFS por informe, A.3 resumen vivas/muertas, A.5 en grafo | Explicar el BFS ("echar tinta en el informe y ver por dónde se tiñe aguas arriba"). Esperado: 8 columnas muertas |
+| 5-8 | **D.1 / D.4 / D.5** (columnas muertas, jobs muertos y ahorro), mejor en el dashboard «Data Lineage Dead Zones» | "127.000 € al año en jobs que nadie consume, uno de ellos deprecado y sin propietario." |
+| 8-10 | **D.6** y **D.7** (idem, dashboard «Data Lineage Dead Zones») | "Una columna sobra en un job que sí se queda; un sistema entero al 0 %." |
+| +2 (opcional) | Parte **C** (C.1/C.1b PageRank, C.2/C.2b y C.3 betweenness), con la sesión aún viva | "Cypher cuenta hasta dónde llega un dato; el algoritmo dice por dónde pasa todo: CALC_EXPOSURE y CALC_RWA son los cuellos de botella." Aviso: betweenness no distingue vivo de muerto (PROMO_SEGMENT_EXTRACT también puntúa); por eso va después de A. Ejecutarla ANTES de Z |
+| 10 | Parte **Z**: borrar las proyecciones (y con ellas la sesión) al terminar: deja de facturar | — |
+| — | La parte **B** de `03` (por qué WCC no basta) queda como material de apoyo: no se cuenta, pero sirve si preguntan por qué BFS y no componentes conexos | — |
+| — | **Plan B si GDS falla:** ir directamente a la parte **D** (mismo resultado en Cypher puro) | — |
 
-### 4 · Bloom (10 min) — *perspectiva creada en Aura; guion pendiente*
+### 4 · Bloom (10 min) — `bloom/BLOOM_DEMO_FLOW.md` *(borrador, por ensayar)*
 
-Rellenar cuando se exporte la perspectiva a `bloom/` y existan `bloom/BLOOM_GUIDE.md` y `bloom/BLOOM_DEMO_FLOW.md`.
+Perspectiva: `bloom/data_lineage_fs_perspective.json` (6 search phrases con desplegable; estilo por defecto). Bloom ya se ha usado en los bloques 1 y 2; este bloque es un repaso en modo exploración.
+
+| Min | Acción | Qué decir |
+|---|---|---|
+| 0-2 | Acto 1: `C3a` (y `C3b`) — mapa de dependencias entre jobs | "Ninguna dependencia está declarada: salen de los datos." |
+| 2-5 | Acto 2: `1. Column $column impact` con `CORE.LOAN.DRAWN_AMOUNT` (o la columna que elija el público) | "A quién avisar y qué volver a ejecutar, en una pantalla." Señalar `EXPOSURE_ADJ_LEGACY` sin informe |
+| 5-8 | Acto 3: `2. Full Path to FinalConsumer $finalConsumer` con `Solvency Report`; `C2` con `REG_MART.CAPITAL.RWA_DENSITY` | "BCBS 239: cada cifra traza hasta su sistema de origen." |
+| 8-10 | Acto 4: puente al dashboard «Data Lineage Dead Zones» | "Bloom enseña la estructura; el dashboard cuenta cuánto sobra y cuesta." |
+
+Si el tiempo aprieta, este bloque se puede suprimir y repartir sus 10 minutos entre los bloques 2 y 3.
 
 ### 5 · Productivización + cierre (8 min) — `queries/04_productivizacion.md`
 
@@ -74,5 +82,5 @@ Rellenar cuando se exporte la perspectiva a `bloom/` y existan `bloom/BLOOM_GUID
 - Todo debe probarse antes en un entorno real (Aura/Desktop + GDS) — nada de lo construido en este proyecto se ha ejecutado contra una base de datos.
 - El dataset es sintético; dejarlo explícito al abrir la demo (ver `data-model/NOTAS_DISENO.md`).
 - Dejar 1-2 minutos de margen entre bloques — la ingesta en vivo es la parte con más riesgo de imprevistos. Plan B de ingesta: tener todo pre-cargado y ejecutar sólo el bloque B de `01_ingesta.cypher` (pocas líneas, sin dependencia de URLs de CSV).
-- Antes de la demo, revisar sesiones AGA olvidadas de un ensayo (`CALL gds.session.list()`) y borrarlas (`gds.session.delete`): se facturan por minuto (mínimo 10 min) hasta que expiran. Ensayar con el mismo plan de Aura que se usará en la demo: tamaño máximo, TTL y nº de sesiones varían por plan.
+- Antes de la demo, revisar sesiones AGA olvidadas de un ensayo (`CALL gds.session.list()`) y borrarlas (`gds.graph.drop` de sus proyecciones, o `gds.session.delete`): se facturan por minuto (mínimo 10 min) hasta que expiran. Ensayar con el mismo plan de Aura que se usará en la demo: tamaño máximo, TTL y nº de sesiones varían por plan.
 - Al preparar una sesión para un cliente concreto, anotar fecha/asistentes/ajustes específicos en el `Context.md` de ese cliente dentro de `Customers/`, no en este fichero.

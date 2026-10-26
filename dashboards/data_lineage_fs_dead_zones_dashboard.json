@@ -1,0 +1,191 @@
+{
+  "version": 2,
+  "title": "Data Lineage Dead Zones",
+  "description": "",
+  "pages": [
+    {
+      "id": "0",
+      "version": 1,
+      "title": "Main page",
+      "widgets": [
+        {
+          "version": 1,
+          "title": "5. Dead Columns inside Live Jobs",
+          "w": 6,
+          "h": 3,
+          "x": 6,
+          "y": 8,
+          "meta": {
+            "latestCypherQueries": [
+              {
+                "query": "MATCH (j:EtlJob)\nWHERE EXISTS {\n  MATCH (:Column)-[t:TRANSFORMS_TO]->(out:Column)\n  WHERE t.scenario = j.name\n    AND EXISTS { MATCH (out)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) }\n}\nMATCH (:Column)-[t2:TRANSFORMS_TO {scenario: j.name}]->(dead:Column)\nWHERE NOT EXISTS { MATCH (dead)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) }\nRETURN j.name AS live_job_with_dead_output, collect(DISTINCT dead.fqn) AS dead_columns;",
+                "origin": "user"
+              }
+            ]
+          },
+          "settings": {
+            "type": "table",
+            "query": "MATCH (j:EtlJob)\nWHERE EXISTS {\n  MATCH (:Column)-[t:TRANSFORMS_TO]->(out:Column)\n  WHERE t.scenario = j.name\n    AND EXISTS { MATCH (out)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) }\n}\nMATCH (:Column)-[t2:TRANSFORMS_TO {scenario: j.name}]->(dead:Column)\nWHERE NOT EXISTS { MATCH (dead)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) }\nRETURN j.name AS live_job_with_dead_output, collect(DISTINCT dead.fqn) AS dead_columns;",
+            "databaseName": "neo4j",
+            "actions": [],
+            "version": 1,
+            "richRenderCells": true,
+            "compact": false,
+            "dataGridStyleRules": []
+          }
+        },
+        {
+          "version": 1,
+          "title": "3. Dead Columns",
+          "w": 12,
+          "h": 4,
+          "x": 0,
+          "y": 4,
+          "meta": {
+            "latestCypherQueries": [
+              {
+                "query": "MATCH (c:Column)\nWHERE NOT EXISTS { MATCH (c)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) }\nOPTIONAL MATCH (ss:SourceSystem)-[:HOSTS]->(c)\nRETURN c.fqn AS dead_column,\n       ss.name AS hosted_in,\n       CASE WHEN EXISTS {\n              MATCH (anc:Column)-[:TRANSFORMS_TO*1..]->(c)\n              WHERE EXISTS { MATCH (anc)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) }\n            }\n            THEN 'dead branch (forks from live data)'\n            ELSE 'isolated zone'\n       END AS zone_type\nORDER BY zone_type, dead_column;",
+                "origin": "user"
+              }
+            ]
+          },
+          "settings": {
+            "type": "table",
+            "query": "MATCH (c:Column)\nWHERE NOT EXISTS { MATCH (c)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) }\nOPTIONAL MATCH (ss:SourceSystem)-[:HOSTS]->(c)\nRETURN c.fqn AS dead_column,\n       ss.name AS hosted_in,\n       CASE WHEN EXISTS {\n              MATCH (anc:Column)-[:TRANSFORMS_TO*1..]->(c)\n              WHERE EXISTS { MATCH (anc)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) }\n            }\n            THEN 'dead branch (forks from live data)'\n            ELSE 'isolated zone'\n       END AS zone_type\nORDER BY zone_type, dead_column;",
+            "databaseName": "neo4j",
+            "actions": [],
+            "version": 1,
+            "richRenderCells": true,
+            "compact": false,
+            "dataGridStyleRules": [
+              {
+                "apply": {
+                  "color": {
+                    "value": "#ffdf81"
+                  }
+                },
+                "column": "zone_type",
+                "metaData": {
+                  "id": "N-UAmHEXphjJbibiKAgK1"
+                },
+                "priority": 0,
+                "where": {
+                  "contains": [
+                    {
+                      "column": "zone_type"
+                    },
+                    "dead branch"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "version": 1,
+          "title": "2. Source System Health (live vs dead)",
+          "w": 8,
+          "h": 4,
+          "x": 4,
+          "y": 0,
+          "meta": {
+            "latestCypherQueries": [
+              {
+                "query": "MATCH (ss:SourceSystem)-[:HOSTS]->(c:Column)\nWITH ss, c, EXISTS { MATCH (c)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) } AS is_live\nWITH ss, count(c) AS hosted_columns, sum(CASE WHEN is_live THEN 1 ELSE 0 END) AS live_columns\nRETURN ss.name AS source_system, ss.criticality AS criticality, hosted_columns, live_columns,\n       hosted_columns - live_columns AS dead_columns,\n       round(100.0 * live_columns / hosted_columns, 1) AS pct_live\nORDER BY pct_live ASC, hosted_columns DESC;",
+                "origin": "user"
+              }
+            ]
+          },
+          "settings": {
+            "type": "bar",
+            "query": "MATCH (ss:SourceSystem)-[:HOSTS]->(c:Column)\nWITH ss, c, EXISTS { MATCH (c)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) } AS is_live\nWITH ss, count(c) AS hosted_columns, sum(CASE WHEN is_live THEN 1 ELSE 0 END) AS live_columns\nRETURN ss.name AS source_system, ss.criticality AS criticality, hosted_columns, live_columns,\n       hosted_columns - live_columns AS dead_columns,\n       round(100.0 * live_columns / hosted_columns, 1) AS pct_live\nORDER BY pct_live ASC, hosted_columns DESC;",
+            "databaseName": "neo4j",
+            "valueKeys": [
+              "live_columns",
+              "dead_columns"
+            ],
+            "orientation": "vertical",
+            "scaleType": "linear",
+            "showLegend": "auto",
+            "showDataZoom": "auto",
+            "version": 1,
+            "barArrangement": "grouped"
+          }
+        },
+        {
+          "version": 1,
+          "title": "1. Potential Annual Saving (EUR)",
+          "w": 4,
+          "h": 4,
+          "x": 0,
+          "y": 0,
+          "meta": {
+            "latestCypherQueries": [
+              {
+                "query": "MATCH (j:EtlJob)\nWHERE NOT EXISTS {\n  MATCH (:Column)-[t:TRANSFORMS_TO]->(out:Column)\n  WHERE t.scenario = j.name\n    AND EXISTS { MATCH (out)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) }\n}\nRETURN sum(j.estimated_compute_cost) AS potential_annual_saving_eur;",
+                "origin": "user"
+              }
+            ]
+          },
+          "settings": {
+            "type": "singleValue",
+            "query": "MATCH (j:EtlJob)\nWHERE NOT EXISTS {\n  MATCH (:Column)-[t:TRANSFORMS_TO]->(out:Column)\n  WHERE t.scenario = j.name\n    AND EXISTS { MATCH (out)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) }\n}\nRETURN sum(j.estimated_compute_cost) AS potential_annual_saving_eur;",
+            "databaseName": "neo4j",
+            "version": 1,
+            "fontSize": null,
+            "textColor": null,
+            "align": 4
+          }
+        },
+        {
+          "version": 1,
+          "title": "4. Dead Jobs (retirement candidates)",
+          "w": 6,
+          "h": 3,
+          "x": 0,
+          "y": 8,
+          "meta": {
+            "latestCypherQueries": [
+              {
+                "query": "MATCH (j:EtlJob)\nWHERE NOT EXISTS {\n  MATCH (:Column)-[t:TRANSFORMS_TO]->(out:Column)\n  WHERE t.scenario = j.name\n    AND EXISTS { MATCH (out)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) }\n}\nOPTIONAL MATCH (j)-[:MAINTAINED_BY]->(o:Owner)\nRETURN j.name AS dead_job, j.status AS status, j.frequency AS frequency,\n       j.estimated_compute_cost AS annual_cost_eur, collect(o.name) AS owners\nORDER BY annual_cost_eur DESC;",
+                "origin": "user"
+              }
+            ]
+          },
+          "settings": {
+            "type": "table",
+            "query": "MATCH (j:EtlJob)\nWHERE NOT EXISTS {\n  MATCH (:Column)-[t:TRANSFORMS_TO]->(out:Column)\n  WHERE t.scenario = j.name\n    AND EXISTS { MATCH (out)-[:TRANSFORMS_TO*0..]->(:Column)-[:FEEDS]->(:FinalConsumer) }\n}\nOPTIONAL MATCH (j)-[:MAINTAINED_BY]->(o:Owner)\nRETURN j.name AS dead_job, j.status AS status, j.frequency AS frequency,\n       j.estimated_compute_cost AS annual_cost_eur, collect(o.name) AS owners\nORDER BY annual_cost_eur DESC;",
+            "databaseName": "neo4j",
+            "actions": [],
+            "version": 1,
+            "richRenderCells": true,
+            "compact": false,
+            "dataGridStyleRules": [
+              {
+                "apply": {
+                  "color": {
+                    "value": "#f16767"
+                  }
+                },
+                "column": "status",
+                "metaData": {
+                  "id": "e-KAKZITGBz10WTY9C4lF"
+                },
+                "priority": 0,
+                "where": {
+                  "equal": [
+                    {
+                      "column": "status"
+                    },
+                    "Deprecated"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "params": []
+}

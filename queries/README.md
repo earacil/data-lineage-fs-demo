@@ -2,7 +2,7 @@
 
 Organizado por **ángulo de negocio**, no por tipo de nodo (mismo criterio que `queries/` en el repo de referencia).
 
-> ⚠️ **Todo el Cypher de esta carpeta está sin validar contra una instancia Neo4j real** (ver `../CONTEXTO_IA.md`, restricción 4). En particular, las llamadas `gds.*` de `03_zonas_muertas_gds.cypher` dependen de la versión de GDS instalada. Probar todo en Aura antes del 29 oct. Requiere haber cargado antes `../data/00_load_live.cypher`. Para `03` hace falta además **Aura Graph Analytics** (GDS serverless) y los parámetros `sessionName`, `sessionMemory`, `sessionTtl` y `sessionId`: ver [`../AURA_SETUP.md`](../AURA_SETUP.md).
+> ✅ `01_ingesta` validada en Aura por el autor (26-oct-2026). ⚠️ **`02_impacto` y `03_zonas_muertas_gds` siguen sin validar** (ver `../CONTEXTO_IA.md`, restricción 4); en `03` las llamadas `gds.*` dependen de Aura Graph Analytics. `04` es una nota, no se ejecuta entera. Cualquier cambio posterior vuelve a ser "a validar". Requiere haber cargado antes `../data/00_load_live.cypher`. Para `03` hace falta además **Aura Graph Analytics** (GDS serverless) y los parámetros `sessionName`, `sessionMemory`, `sessionTtl` y `sessionId`: ver [`../AURA_SETUP.md`](../AURA_SETUP.md).
 
 | Fichero | Ángulo | Qué contiene |
 |---|---|---|

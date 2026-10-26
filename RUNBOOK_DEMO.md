@@ -1,6 +1,6 @@
 # Guion de demo — plantilla genérica (1 hora)
 
-> Estado: bloques 1, 2, 3 y 5 con los comandos exactos. **El bloque Bloom sigue pendiente** (se rellenará con `bloom/BLOOM_DEMO_FLOW.md` cuando exista). Estructura y timing reutilizables para cualquier cliente de Financial Services.
+> Estado: bloques 1, 2, 3 y 5 con los comandos exactos. **El bloque Bloom está pendiente de redactar:** la perspectiva ya existe en Aura y se rellenará con `bloom/BLOOM_DEMO_FLOW.md` cuando se exporte. Estructura y timing reutilizables para cualquier cliente de Financial Services.
 >
 > ⚠️ Todo el Cypher referenciado **no se ha ejecutado contra una instancia Neo4j real** — ensayar entera en el entorno de la demo (Aura/Desktop + GDS) antes de usarla.
 
@@ -29,7 +29,7 @@
 |---|---|---|
 | 0-2 | Mostrar las restricciones y el segmento 0 (sistemas, propietarios, informes) | "Primero el contexto de negocio: 7 sistemas origen, 6 informes finales." |
 | 2-5 | Ejecutar el segmento **P3** (reporting regulatorio) | "Este lote no trae ninguna columna de riesgo y aun así sus transformaciones leen `RISK_MART.*`: el `MERGE` por `fqn` las encuentra ya cargadas." Mostrar en Browser el camino P3 → P2 → P1 |
-| 5-8 | `01_ingesta.cypher` bloque **B** (proyecto nuevo `BUILD_RWA_DENSITY`), luego **C.1** y **C.2** | "Cero aristas escritas a mano entre proyectos y el dato nuevo ya traza hasta el Core Banking y el motor de riesgo SAS." |
+| 5-8 | `01_ingesta.cypher`: **B.1** (el grafo ANTES, en vista de grafo) → **B.2–B.4** (ingesta del proyecto nuevo `BUILD_RWA_DENSITY`) → **B.5** (qué se ha cargado) → **C.1b** (cómo se engancha) → **C.2b** (por dónde fluye el dato) → **C.3b / C.3c** (mapa completo de jobs) | "Cero aristas escritas a mano entre proyectos: el job nuevo se engancha a columnas que ya existían y su dato traza hasta el Core Banking y el motor de riesgo SAS." |
 | 8-10 | Repetir bloque B y bloque **A** | "Idempotente: mismos números. Eso es lo que permite cargar cada noche sin miedo." |
 
 ### 2 · Impacto (15 min) — `queries/02_impacto.cypher`
@@ -55,9 +55,9 @@
 | 10 | Parte **Z**: borrar la sesión al terminar (deja de facturar) | — |
 | — | **Plan B si GDS falla:** ir directamente a la parte **C** (mismo resultado en Cypher puro) | — |
 
-### 4 · Bloom (10 min) — *pendiente*
+### 4 · Bloom (10 min) — *perspectiva creada en Aura; guion pendiente*
 
-Rellenar cuando existan `bloom/BLOOM_GUIDE.md`, `bloom/BLOOM_DEMO_FLOW.md` y la perspectiva.
+Rellenar cuando se exporte la perspectiva a `bloom/` y existan `bloom/BLOOM_GUIDE.md` y `bloom/BLOOM_DEMO_FLOW.md`.
 
 ### 5 · Productivización + cierre (8 min) — `queries/04_productivizacion.md`
 

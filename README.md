@@ -1,6 +1,6 @@
 # Data Lineage Demo — Financial Services
 
-> Estado: **modelo, dataset sintético y queries (ángulos 1, 2, 3 y 5) escritos. Perspectiva Bloom pendiente. Nada se ha ejecutado aún contra Neo4j real.**
+> Estado: **modelo, dataset sintético y queries (ángulos 1, 2, 3 y 5) escritos. Validados en Aura: carga de datos y `01_ingesta`; pendientes `02` y `03`. Perspectiva Bloom creada en Aura; falta exportarla al repo.**
 >
 > **¿Eres una IA retomando este proyecto?** Lee primero [`CONTEXTO_IA.md`](CONTEXTO_IA.md) — tiene las restricciones duras, el estado exacto y los próximos pasos con criterios de aceptación.
 
@@ -41,7 +41,7 @@ data-lineage-fs-demo/
 │   └── NOTAS_DISENO.md            ← decisiones de diseño, qué es sintético, fuentes
 ├── data/                          ← CSVs del dataset sintético, script de carga `LOAD CSV`, generador y validador
 ├── queries/                       ← .cypher por ángulo de negocio + nota de productivización
-└── bloom/                         ← (pendiente) perspectiva, guía y guion de escenas
+└── bloom/                         ← perspectiva (creada en Aura, pendiente de exportar), guía y guion de escenas
 ```
 
 ## Estado actual / próximos pasos
@@ -49,10 +49,11 @@ data-lineage-fs-demo/
 - [x] Modelo de datos diseñado (6 tipos de nodo)
 - [x] Estructura de carpetas y documentación base
 - [x] Generar dataset sintético multi-proyecto (CSV + LOAD CSV, carga en vivo) — consistencia comprobada con `data/validate_dataset.py`
-- [x] Escribir las 3 queries de los ángulos 1-3 (sin validar en Neo4j)
+- [x] Escribir las 3 queries de los ángulos 1-3 — `01` validada en Aura; `02` y `03` sin validar
 - [x] Escribir nota de productivización (ángulo 5)
-- [ ] Configurar perspectiva y guion de Bloom (ángulo 4)
-- [ ] Validar en un entorno real (Aura/Desktop + GDS) antes de cualquier uso en vivo
+- [ ] Validar `02_impacto` y `03_zonas_muertas_gds` (incluida la sesión Aura Graph Analytics) en Aura
+- [x] Configurar la perspectiva de Bloom en Aura (ángulo 4)
+- [ ] Exportar la perspectiva a `bloom/data_lineage_fs_perspective.json` y escribir guía y guion de escenas
 - [ ] Al preparar esta demo para un cliente concreto: ajustar nombres de sistemas/informes a su contexto real, sin tocar esta versión genérica — crear una copia o una capa de personalización aparte
 
 ## Uso con un cliente concreto

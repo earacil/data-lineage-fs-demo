@@ -14,7 +14,8 @@
 //
 // GUION EN VIVO (≈10 min)
 //   A. Foto "antes"            → contadores
-//   B. Llega un proyecto nuevo → MERGE idempotente (se puede ejecutar 2 veces: no duplica nada)
+//   B. Llega un proyecto nuevo → B.1 dibujo de "qué había" (ANTES de cargar), B.2–B.4 MERGE idempotente
+//                                (se puede ejecutar 2 veces: no duplica nada), B.5 dibujo de "qué se ha cargado"
 //   C. Evidencia de auto-conexión → qué columnas compartía con otros proyectos, linaje completo sin
 //                                   haber escrito ninguna arista "entre proyectos"
 //   D. Salud de la ingesta     → comprobaciones de consistencia (scenario ↔ EtlJob, HOSTS, etc.)
@@ -40,6 +41,11 @@ MATCH ()-[t:TRANSFORMS_TO]->() RETURN columns, jobs, count(t) AS transforms_to;
 //   · RISK_MART.RWA.RWA_AMOUNT   → escrita por CALC_RWA            (proyecto P2, riesgo de crédito)
 //   · STG.STG_ACCOUNT.BALANCE    → escrita por LOAD_CORE_ACCOUNTS  (proyecto P1, ingesta core)
 //
+// Orden de la historia:
+//   B.1  Cómo está el grafo ANTES de cargar nada (el linaje que ya existe alrededor de esas dos columnas)
+//   B.2–B.4  La ingesta: job → columnas → linaje y resto de relaciones
+//   B.5  Qué se ha cargado (sólo lo nuevo)      B.6  (opcional) lo mismo en tabla
+//
 // Reglas del patrón (son el contenido de la nota de productivización, ver 04_productivizacion.md):
 //   1. Todo nodo se identifica por una clave natural estable (`fqn`, `id`) → MERGE por esa clave sola.
 //   2. Las propiedades descriptivas van en ON CREATE SET: una columna que ya existe NO se sobrescribe
@@ -48,7 +54,26 @@ MATCH ()-[t:TRANSFORMS_TO]->() RETURN columns, jobs, count(t) AS transforms_to;
 //      en el CSV es un hash corto) → reejecutar el script no crea aristas duplicadas.
 // -------------------------------------------------------------------------------------
 
-// B.1 · El job (con su propietario)
+// B.1 · ANTES DE CARGAR — LO QUE YA HAY: el linaje preexistente de las dos columnas que usará el proyecto
+//       nuevo. Ejecútalo ANTES de B.2 y mira el resultado en vista de grafo (no de tabla).
+//       Se ven los orígenes crudos (Core Banking, SAS…), los jobs de otros proyectos que ya procesan esas
+//       columnas y las transformaciones que las producen. Ahí es donde se va a enganchar el job nuevo.
+//       Esperado: orígenes CORE.LOAN.DRAWN_AMOUNT/UNDRAWN_AMOUNT y SAS_RISK.RISK_WEIGHT.RISK_WEIGHT
+//       (hacia RWA_AMOUNT) y CORE.ACCOUNT.BALANCE (hacia BALANCE). Los nodos EtlJob que se dibujan son los
+//       que ya procesaban esas columnas: CALC_RWA y BUILD_COREP_SOLVENCY (RWA_AMOUNT); LOAD_CORE_ACCOUNTS,
+//       BUILD_FINREP_BALANCE y BUILD_CHURN_FEATURES (BALANCE). Los jobs aguas arriba (CALC_EXPOSURE,
+//       LOAD_CORE_LOANS, LOAD_RISK_RATINGS) aparecen como `scenario` en las aristas.
+//       (Usa los fqn directamente porque el job nuevo todavía no existe; el filtro por nombre hace que el
+//       dibujo siga mostrando el "antes" aunque lo ejecutes de nuevo después de cargar.)
+MATCH (shared:Column)
+WHERE shared.fqn IN ['RISK_MART.RWA.RWA_AMOUNT', 'STG.STG_ACCOUNT.BALANCE']
+MATCH lineage = (root:Column)-[:TRANSFORMS_TO*1..10]->(shared)
+WHERE NOT EXISTS { ()-[:TRANSFORMS_TO]->(root) }
+MATCH touched_by = (other:EtlJob)-[:PROCESSES]->(shared)
+WHERE other.name <> 'BUILD_RWA_DENSITY'
+RETURN lineage, touched_by;
+
+// B.2 · El job (con su propietario)
 MERGE (j:EtlJob {id: 'J90'})
   ON CREATE SET j.name = 'BUILD_RWA_DENSITY',
                 j.frequency = 'Weekly batch',
@@ -59,7 +84,7 @@ WITH j
 MATCH (o:Owner {id: 'O04'})
 MERGE (j)-[:MAINTAINED_BY]->(o);
 
-// B.2 · Las columnas. Dos ya existen (se reutilizan), una es nueva.
+// B.3 · Las columnas. Dos ya existen (se reutilizan), una es nueva.
 UNWIND [
   {fqn: 'RISK_MART.RWA.RWA_AMOUNT',        name: 'RWA_AMOUNT',   kind: 'COLUMN', data_type: 'NUMBER(18,2)',
    field_type: 'amount', evidence: 'Product of an amount and a weight (risk-weighted assets)', host: 'SS06'},
@@ -75,30 +100,47 @@ WITH c, col
 MATCH (s:SourceSystem {id: col.host})
 MERGE (s)-[:HOSTS]->(c);
 
-// B.3 · El linaje (una arista por origen; misma expresión → multi-origen, igual que en el CSV)
-UNWIND [
-  {src: 'RISK_MART.RWA.RWA_AMOUNT'},
-  {src: 'STG.STG_ACCOUNT.BALANCE'}
-] AS s
-MATCH (src:Column {fqn: s.src})
+// B.4 · El linaje y el resto de relaciones, en una sola sentencia:
+//         · TRANSFORMS_TO  una arista por origen (misma expresión → multi-origen, igual que en el CSV)
+//         · PROCESSES      qué job toca qué columnas (los dos orígenes y el destino)
+//         · FEEDS          quién consume el resultado (Risk Data Aggregation Dashboard)
+MATCH (j:EtlJob {id: 'J90'})
 MATCH (tgt:Column {fqn: 'REG_MART.CAPITAL.RWA_DENSITY'})
+MATCH (f:FinalConsumer {id: 'FC04'})
+UNWIND ['RISK_MART.RWA.RWA_AMOUNT', 'STG.STG_ACCOUNT.BALANCE'] AS src_fqn
+MATCH (src:Column {fqn: src_fqn})
 MERGE (src)-[t:TRANSFORMS_TO {id: 'BUILD_RWA_DENSITY|' + src.fqn + '|' + tgt.fqn}]->(tgt)
   ON CREATE SET t.scenario = 'BUILD_RWA_DENSITY',
                 t.transformation_expression = 'SUM(RWA_AMOUNT) / SUM(BALANCE)',
                 t.filters = [],
-                t.is_synthetic_source = false;
+                t.is_synthetic_source = false
+MERGE (j)-[:PROCESSES]->(src)
+MERGE (j)-[:PROCESSES]->(tgt)
+MERGE (tgt)-[:FEEDS]->(f);
 
-// B.4 · Qué job toca qué columnas, y quién consume el resultado
-MATCH (j:EtlJob {id: 'J90'})
-UNWIND ['RISK_MART.RWA.RWA_AMOUNT', 'STG.STG_ACCOUNT.BALANCE', 'REG_MART.CAPITAL.RWA_DENSITY'] AS fqn
-MATCH (c:Column {fqn: fqn})
-MERGE (j)-[:PROCESSES]->(c);
+// B.5 · AHORA — LO QUE SE HA CARGADO: sólo lo que aporta el proyecto nuevo (6 nodos, 7 relaciones):
+//       el job y su propietario, las 3 columnas que toca, las 2 aristas TRANSFORMS_TO (misma expresión,
+//       multi-origen) y el informe que consume el resultado. Vista de grafo, como B.1.
+//       Las 2 columnas de origen son las MISMAS que has visto en B.1: ahí es donde el proyecto nuevo
+//       "se engancha" al linaje que ya existía. Sólo `RWA_DENSITY` y `BUILD_RWA_DENSITY` son nodos nuevos.
+//       Idea a transmitir: la carga sólo ha AÑADIDO 1 job, 1 columna y 2 aristas de linaje; todo lo demás
+//       que se veía en B.1 (orígenes, sistemas, otros jobs) ya estaba y ahora queda enganchado.
+MATCH (new:EtlJob {name: 'BUILD_RWA_DENSITY'})
+MATCH job_edges = (new)-[:PROCESSES|MAINTAINED_BY]->()
+MATCH new_lineage = (:Column)-[:TRANSFORMS_TO {scenario: new.name}]->(:Column)-[:FEEDS]->(:FinalConsumer)
+RETURN job_edges, new_lineage;
 
-MATCH (c:Column {fqn: 'REG_MART.CAPITAL.RWA_DENSITY'})
-MATCH (f:FinalConsumer {id: 'FC04'})   // Risk Data Aggregation Dashboard
-MERGE (c)-[:FEEDS]->(f);
+// B.6 · (opcional, tabla) La misma historia en una línea por columna: ¿nueva o reutilizada?
+MATCH (new:EtlJob {name: 'BUILD_RWA_DENSITY'})-[:PROCESSES]->(c:Column)
+OPTIONAL MATCH (other:EtlJob)-[:PROCESSES]->(c) WHERE other <> new
+WITH c, collect(DISTINCT other.name) AS already_processed_by
+RETURN c.fqn AS column,
+       CASE WHEN size(already_processed_by) = 0 THEN 'NEW (created by this load)'
+            ELSE 'REUSED (already in the graph)' END AS status,
+       already_processed_by
+ORDER BY status DESC, column;
 
-// >>> Ejecuta de nuevo A: +1 EtlJob, +1 Column, +2 TRANSFORMS_TO. Ejecuta B.1–B.4 otra vez y A de nuevo:
+// >>> Ejecuta de nuevo A: +1 EtlJob, +1 Column, +2 TRANSFORMS_TO. Ejecuta B.2–B.4 otra vez y A de nuevo:
 //     los números no se mueven (idempotencia).
 
 
@@ -113,6 +155,19 @@ OPTIONAL MATCH (other:EtlJob)-[:PROCESSES]->(c) WHERE other <> j
 RETURN c.fqn AS shared_column, collect(DISTINCT other.name) AS also_processed_by
 ORDER BY shared_column;
 
+// C.1b · Mismo resultado para VISUALIZAR en Browser/Bloom (devuelve paths) — paso 1 de la historia:
+//        "¿cómo se ha conectado el job nuevo?"  Dibuja el job nuevo, las columnas que comparte con el
+//        resto del grafo y los jobs que ya las tocaban:
+//            (BUILD_RWA_DENSITY) → [columna compartida] ← (job que ya la procesaba)
+//        Esperado: 1 job nuevo + 2 columnas compartidas (RISK_MART.RWA.RWA_AMOUNT y STG.STG_ACCOUNT.BALANCE)
+//        + 5 jobs existentes (CALC_RWA y BUILD_COREP_SOLVENCY; LOAD_CORE_ACCOUNTS, BUILD_FINREP_BALANCE y
+//        BUILD_CHURN_FEATURES). La columna nueva RWA_DENSITY no aparece: no se comparte con nadie.
+//        Hilo de la demo:  C.1b (el job se engancha) → C.2b (por dónde fluye el dato: columnas) →
+//        C.3b / C.3c (el mapa completo de jobs).
+MATCH p = (new:EtlJob {name: 'BUILD_RWA_DENSITY'})-[:PROCESSES]->(c:Column)<-[:PROCESSES]-(other:EtlJob)
+WHERE other <> new
+RETURN p;
+
 // C.2 · Linaje completo del dato nuevo hasta sus orígenes crudos y los sistemas que los alojan:
 //       cruza ingesta core (P1) + riesgo (P2) + SAS (SS03) sin una sola arista escrita "a mano".
 MATCH p = (root:Column)-[:TRANSFORMS_TO*1..10]->(:Column {fqn: 'REG_MART.CAPITAL.RWA_DENSITY'})
@@ -122,7 +177,8 @@ RETURN ss.name AS source_system, root.fqn AS origin_column, length(p) AS hops,
        [r IN relationships(p) | r.scenario] AS jobs_in_path
 ORDER BY hops DESC, origin_column;
 
-// C.2b · Mismo linaje para visualizar en Browser/Bloom
+// C.2b · Mismo linaje para visualizar en Browser/Bloom — paso 2 de la historia: "¿por dónde fluye el dato?"
+//        (las columnas, desde los orígenes crudos de Core Banking y SAS hasta RWA_DENSITY)
 MATCH p = (root:Column)-[:TRANSFORMS_TO*1..10]->(:Column {fqn: 'REG_MART.CAPITAL.RWA_DENSITY'})
 WHERE NOT EXISTS { ()-[:TRANSFORMS_TO]->(root) }
 RETURN p;
@@ -134,6 +190,37 @@ WHERE w.scenario <> r.scenario
 RETURN w.scenario AS producer_job, r.scenario AS consumer_job,
        count(DISTINCT c) AS shared_columns, collect(DISTINCT c.fqn)[..3] AS sample_columns
 ORDER BY producer_job, consumer_job;
+//       Esperado: 13 pares productor→consumidor entre 12 jobs (15 pares y 13 jobs si ya has ejecutado el
+//       bloque B: BUILD_RWA_DENSITY depende de CALC_RWA y de LOAD_CORE_ACCOUNTS). LEGACY_BRANCH_REPORT no
+//       aparece: es el único job sin ninguna dependencia con otro.
+
+// C.3b · Mismo mapa de dependencias entre jobs, para VISUALIZAR en Browser/Bloom (devuelve paths)
+//        Cada dependencia se dibuja como  (job productor) → [columna compartida] ← (job consumidor).
+//        La columna puente es lo que "pega" los dos jobs: es el dato que uno escribe y el otro lee.
+//        Se usa TRANSFORMS_TO.scenario para distinguir quién ESCRIBE y quién LEE (PROCESSES no lo distingue).
+//        Esperado: 12 EtlJob, 26 columnas puente y 13 pares de jobs (con el bloque B cargado: 13 EtlJob y
+//        15 pares; las columnas puente siguen siendo 26 porque BUILD_RWA_DENSITY reutiliza dos que ya lo
+//        eran). Los jobs aparecen enlazados en cadena LOAD_* → CALC_* → BUILD_*, y LOAD_CRM_CUSTOMERS,
+//        LOAD_CORE_ACCOUNTS y LOAD_CARD_TRANSACTIONS se abren en abanico hacia varios consumidores.
+MATCH p = (producer:EtlJob)-[:PROCESSES]->(c:Column)<-[:PROCESSES]-(consumer:EtlJob)
+WHERE producer <> consumer
+  AND EXISTS { MATCH (:Column)-[:TRANSFORMS_TO {scenario: producer.name}]->(c) }   // producer ESCRIBE c
+  AND EXISTS { MATCH (c)-[:TRANSFORMS_TO {scenario: consumer.name}]->(:Column) }   // consumer LEE c
+RETURN p;
+
+// C.3c · (opcional) La versión más limpia: aristas job → job directas, sin columnas intermedias.
+//        Usa relaciones VIRTUALES de APOC: se dibujan pero NO se guardan en la base de datos (el modelo no
+//        cambia). Requiere APOC (`apoc.create.vRelationship`) disponible en tu instancia y que la
+//        herramienta de visualización admita relaciones virtuales — pruébalo en Query/Explore; si no se
+//        dibuja, usa C.3b. Cada arista lleva cuántas columnas comparten los dos jobs.
+MATCH (producer:EtlJob)-[:PROCESSES]->(c:Column)<-[:PROCESSES]-(consumer:EtlJob)
+WHERE producer <> consumer
+  AND EXISTS { MATCH (:Column)-[:TRANSFORMS_TO {scenario: producer.name}]->(c) }
+  AND EXISTS { MATCH (c)-[:TRANSFORMS_TO {scenario: consumer.name}]->(:Column) }
+WITH producer, consumer, collect(DISTINCT c.fqn) AS shared_columns
+RETURN producer, consumer,
+       apoc.create.vRelationship(producer, 'DEPENDENCY', {shared_columns: size(shared_columns),
+                                                          sample: shared_columns[..3]}, consumer) AS dependency;
 
 
 // -------------------------------------------------------------------------------------

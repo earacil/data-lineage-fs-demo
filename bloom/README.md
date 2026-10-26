@@ -1,4 +1,6 @@
-# bloom/ (pendiente)
+# bloom/ (perspectiva creada en Aura; pendiente de exportar)
+
+**Estado:** la perspectiva de Bloom ya está creada y probada en Aura (confirmado por el autor, 26-oct-2026). Al terminar las pruebas se descargará el fichero de Bloom y se guardará aquí como `data_lineage_fs_perspective.json`; hasta entonces, la guía y el guion no se redactan para no inventar estilos que no coincidan con lo configurado.
 
 Ángulo 4 de la demo. Ficheros previstos:
 

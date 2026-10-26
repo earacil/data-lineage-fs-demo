@@ -11,7 +11,7 @@ Construir una **demo genérica y reutilizable de data lineage sobre Neo4j para F
 1. **Cero referencias a clientes concretos.** Ningún nombre de empresa, persona, fecha de reunión o captura de pantalla de un cliente real debe aparecer en ningún fichero de este proyecto. Si se detecta alguna, es un error a corregir, no una decisión de diseño.
 2. **Idioma**: todos los identificadores del modelo de datos (labels de nodo, tipos de relación, nombres de propiedad) van **en inglés**. La prosa de los `.md` (explicaciones, narrativa, comentarios) va **en español**, salvo que la persona indique lo contrario.
 3. **`Column` y `TRANSFORMS_TO` no se modifican.** Están inspirados en un patrón real de linaje visto en un cliente bancario (detalle en `data-model/NOTAS_DISENO.md`) y son el ancla de credibilidad de toda la demo ("esto ya lo hemos visto funcionar"). Cualquier cambio en sus propiedades o semántica rompe esa credibilidad.
-4. **Sólo `data/00_load_live.cypher` se ha ejecutado contra una instancia real (Aura, 24-oct-2026, resultado correcto).** El resto del proyecto (`queries/`, `AURA_SETUP.md`, partes GDS) no: el entorno donde se generó no tiene Neo4j ni GDS disponibles. Todo Cypher, especialmente las queries de GDS, debe tratarse como "a validar" hasta que alguien lo pruebe en Aura o Desktop real. No asumir que algo funciona solo porque la sintaxis parece correcta.
+4. **Validado en Aura por el autor:** `data/00_load_live.cypher` (24-oct-2026, recuentos correctos) y `queries/01_ingesta.cypher` (26-oct-2026). **Siguen sin validar:** `queries/02_impacto.cypher`, `queries/03_zonas_muertas_gds.cypher` (incluida la sesión de Aura Graph Analytics y los pasos de `AURA_SETUP.md` que dependen de ella). La validación la hizo la persona, no el agente que generó los ficheros (su entorno no tiene Neo4j ni GDS). `queries/04_productivizacion.md` es una nota de buenas prácticas, no se ejecuta de punta a punta. Todo Cypher **nuevo o modificado** debe tratarse como "a validar" hasta que se pruebe en Aura o Desktop real.
 5. **El dataset es y debe seguir siendo sintético.** No rellenar `data/` con datos reales de ningún cliente, aunque se tenga acceso a ellos para otra tarea.
 
 ## Estado exacto del proyecto ahora mismo
@@ -21,11 +21,11 @@ Construir una **demo genérica y reutilizable de data lineage sobre Neo4j para F
 | `README.md` | ✅ completo | Qué es, por qué un grafo, los 5 ángulos, estructura, estado |
 | `data-model/SCHEMA.md` | ✅ completo | Los 6 tipos de nodo y 5 tipos de relación, con propiedades en inglés |
 | `data-model/NOTAS_DISENO.md` | ✅ completo | Por qué cada decisión de modelado, qué es real vs sintético, fuentes |
-| `RUNBOOK_DEMO.md` | 🟡 parcial | Estructura y timing de 1h + comandos exactos de los bloques 1, 2, 3 y 5; el bloque Bloom sigue pendiente |
+| `RUNBOOK_DEMO.md` | 🟡 parcial | Estructura y timing de 1h + comandos exactos de los bloques 1, 2, 3 y 5; el bloque Bloom se rellenará al exportar la perspectiva |
 | `data/` | ✅ completo; **`00_load_live.cypher` validado en Aura el 24-oct-2026** (recuentos 81/7/13/6/7 y 66/81/113/25/14 correctos) | 10 CSV, `00_load_live.cypher` (segmentos P0–P5), `generate_dataset.py` (fuente de verdad) y `validate_dataset.py` (consistencia OK) |
-| `queries/` | ✅ completo (sin validar en Neo4j) | `01_ingesta.cypher`, `02_impacto.cypher`, `03_zonas_muertas_gds.cypher`, `04_productivizacion.md` |
-| `AURA_SETUP.md` | ✅ completo (sin validar en Aura) | Requisitos de Aura, parámetros del Query tool (`baseUrl`, `sessionName`, `sessionMemory`, `sessionTtl`, `sessionId`), flujo de sesión AGA, problemas típicos |
-| `bloom/` | ⏳ solo README con el plan | Falta la guía, el guion de escenas y el JSON de perspectiva |
+| `queries/` | ✅ completo; `01` validada en Aura (26-oct-2026); **`02` y `03` pendientes de validar** | `01_ingesta.cypher`, `02_impacto.cypher`, `03_zonas_muertas_gds.cypher`, `04_productivizacion.md` |
+| `AURA_SETUP.md` | ✅ completo; `baseUrl` validado, **flujo de sesión AGA pendiente de validar** (depende de `03`) | Requisitos de Aura, parámetros del Query tool (`baseUrl`, `sessionName`, `sessionMemory`, `sessionTtl`, `sessionId`), flujo de sesión AGA, problemas típicos |
+| `bloom/` | 🟡 perspectiva creada y probada en Aura (según el autor); **pendiente exportar** el JSON al repo | Falta el JSON de perspectiva (se descargará de Bloom al terminar las pruebas), la guía y el guion de escenas |
 
 ## Próximos pasos, en orden, con criterio de aceptación
 
@@ -38,13 +38,14 @@ Incluye (todo verificado por `data/validate_dataset.py`), como mínimo, para que
 - Consistencia estricta: todo valor de `TRANSFORMS_TO.scenario` debe tener un `EtlJob.name` correspondiente; todo `Column` debe colgar de al menos un `SourceSystem` vía `HOSTS`.
 - Verificar con un script (Python u otro) que no queden referencias huérfanas antes de dar el dataset por bueno.
 
-### 2. Queries (`queries/`) — ✅ HECHO (pendiente de validar en Neo4j/GDS real)
+### 2. Queries (`queries/`) — ✅ HECHO; `01` validada en Aura, `02` y `03` pendientes
 - `01_ingesta.cypher`: patrón `MERGE` idempotente por `fqn`/`id`, pensado para ejecutarse en vivo y demostrar la auto-conexión del punto anterior.
 - `02_impacto.cypher`: camino variable ascendente y descendente por `fqn`, más una query de centralidad (qué columnas/sistemas tienen más dependientes).
 - `03_zonas_muertas_gds.cypher`: proyección GDS + BFS en reversa desde `FinalConsumer`, **más un fallback en Cypher puro** (`NOT EXISTS` de alcanzabilidad) por si GDS falla o no está disponible en el entorno de la demo.
 - `04_productivizacion.md`: no es Cypher ejecutable — son buenas prácticas (ingesta idempotente, separación de la capa semántica, informe periódico de zonas muertas) con 1-2 queries de ejemplo.
 
-### 3. Bloom (`bloom/`) — ⏳ PENDIENTE (siguiente paso)
+### 3. Bloom (`bloom/`) — 🟡 perspectiva creada en Aura; pendiente exportarla al repo
+- El autor descargará el fichero de perspectiva de Bloom al final de las pruebas y lo guardará como `bloom/data_lineage_fs_perspective.json`. Después: redactar `BLOOM_GUIDE.md` y `BLOOM_DEMO_FLOW.md` a partir de lo que realmente se configuró (no inventar estilos ni scene actions sin ver el JSON).
 - Solo tiene sentido después del dataset y las queries, porque las scene actions y search phrases dependen de los valores reales del dataset.
 - Seguir el formato de "guion en actos con talking points entre comillas" descrito en `data-model/NOTAS_DISENO.md` (inspirado en `BLOOM_DEMO_FLOW.md` del repo de referencia).
 
@@ -73,7 +74,7 @@ data-lineage-fs-demo/
 │   ├── README.md
 │   ├── 01_ingesta.cypher · 02_impacto.cypher · 03_zonas_muertas_gds.cypher
 │   └── 04_productivizacion.md
-└── bloom/README.md          ← plan de Bloom (pendiente de construir)
+└── bloom/README.md          ← plan de Bloom (perspectiva creada en Aura, pendiente de exportar)
 ```
 
 ## Fuentes de inspiración (resumen — detalle completo en `data-model/NOTAS_DISENO.md`)

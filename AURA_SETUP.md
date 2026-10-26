@@ -1,6 +1,6 @@
 # Preparar la demo en Aura (carga desde GitHub + Aura Graph Analytics serverless)
 
-> ✅ `baseUrl` y la sesión implícita (proyecciones con `memory`, partes A–C de `03`) los ha probado el autor en Aura el 26-oct-2026 (ver `CONTEXTO_IA.md`, restricción 4); lo nuevo de la parte Z sigue "a validar". Está escrito a partir de la documentación de Neo4j consultada el 22-oct-2026; los límites por plan (tamaño, TTL, nº de sesiones) cambian — **confírmalos en la consola de Aura antes de la demo**.
+> ✅ `baseUrl` y la sesión implícita (proyecciones con `memory`, partes A–C y Z de `03`) los ha probado el autor en Aura el 26-oct-2026 (ver `CONTEXTO_IA.md`, restricción 4). Está escrito a partir de la documentación de Neo4j consultada el 22-oct-2026; los límites por plan (tamaño, TTL, nº de sesiones) cambian — **confírmalos en la consola de Aura antes de la demo**.
 
 La demo usa **Aura Graph Analytics (AGA)**, el GDS "serverless": sesiones efímeras y aisladas de la base de datos, que se crean y se destruyen bajo demanda. Se manejan **desde el propio Query tool de Aura con Cypher**, sin Python ni credenciales de la Aura API, y la sesión es **implícita**: la crea la primera proyección y se elimina al borrar sus proyecciones. Esto afecta sólo a `queries/03_zonas_muertas_gds.cypher` (partes A, B, C y Z); `00_load_live.cypher`, `01`, `02` y la parte D de `03` son Cypher normal.
 

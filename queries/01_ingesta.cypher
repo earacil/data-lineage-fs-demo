@@ -2,8 +2,8 @@
 // 01_ingesta.cypher — Ángulo 1: ingesta end-to-end, idempotente y con auto-conexión
 // Demo de Data Lineage para Financial Services · Neo4j 5.x
 //
-// ⚠️  NO VALIDADO contra una instancia Neo4j real hasta que alguien lo ejecute en Aura/Desktop
-//     (ver CONTEXTO_IA.md, restricción 4). Tratar como "a validar".
+// ✅ Validado en Aura por el autor (26-oct-2026; ver CONTEXTO_IA.md, restricción 4). Cualquier cambio posterior
+//    vuelve a ser "a validar".
 //
 // PRERREQUISITO: haber ejecutado data/00_load_live.cypher (segmento 0 + P1..P5).
 //
@@ -46,7 +46,7 @@ MATCH ()-[t:TRANSFORMS_TO]->() RETURN columns, jobs, count(t) AS transforms_to;
 //   B.2–B.4  La ingesta: job → columnas → linaje y resto de relaciones
 //   B.5  Qué se ha cargado (sólo lo nuevo)      B.6  (opcional) lo mismo en tabla
 //
-// Reglas del patrón (son el contenido de la nota de productivización, ver 04_productivizacion.md):
+// Reglas del patrón (son la base del cierre de productivización de la demo, ver RUNBOOK_DEMO.md):
 //   1. Todo nodo se identifica por una clave natural estable (`fqn`, `id`) → MERGE por esa clave sola.
 //   2. Las propiedades descriptivas van en ON CREATE SET: una columna que ya existe NO se sobrescribe
 //      desde un proyecto que sólo la lee.

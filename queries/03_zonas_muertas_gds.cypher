@@ -3,11 +3,10 @@
 // Demo de Data Lineage para Financial Services · AuraDB + Aura Graph Analytics (GDS serverless)
 //
 // ESTADO DE VALIDACIÓN (ver CONTEXTO_IA.md, restricción 4)
-//   ✅ El autor ejecutó en Aura (26-oct-2026) una versión previa de A.1, A.1b, A.2, B.0, B.1, B.2, C.1, C.2 y C.3.
-//   ✅ Parte D (Cypher puro), validada al montar el dashboard «Data Lineage Dead Zones» (26-oct-2026): D.1, D.4, D.5
-//      (variante de una sola columna), D.6 y D.7.
-//   ⏳ Esta versión reescribe A.2–A.5, B.2–B.3, añade C.1b/C.2b y Z, y mueve la parte «Cypher puro» a D: lo nuevo o
-//      cambiado en GDS está "a validar". Tampoco se han ejecutado D.2 ni D.3.
+//   ✅ Validado en Aura por el autor (26-oct-2026): partes A, B, C, Z y D completas (incluidas D.2 y D.3), con sesión
+//      AGA implícita. D.1, D.4, D.5 (variante de una sola columna), D.6 y D.7 corren además en el dashboard
+//      «Data Lineage Dead Zones». Las cifras «esperado» de betweenness salen de un cálculo en Python, no de GDS.
+//      Cualquier cambio posterior vuelve a ser "a validar".
 //   Si algo de GDS falla, la PARTE D da el mismo resultado sin sesión.
 //
 // PRERREQUISITOS
@@ -132,7 +131,7 @@ RETURN count(c) AS total_columns,
        count(CASE WHEN NOT id(c) IN visited_ids THEN 1 END) AS dead_columns;
 
 // A.4 · Las columnas muertas (las que ningún BFS visitó), con su sistema y el job que las produce
-//       esperado: 8 filas. Las 2 raíces LEGACY_DM.* sin job (se cargan fuera del grafo); LEGACY_RPT.* ← LEGACY_BRANCH_REPORT;
+//       esperado: 8 filas. Las 3 raíces LEGACY_DM.* sin job (se cargan fuera del grafo); LEGACY_RPT.* ← LEGACY_BRANCH_REPORT;
 //       MKT_STG.PROMO.* ← PROMO_SEGMENT_EXTRACT; RISK_MART.EXPOSURE.EXPOSURE_ADJ_LEGACY ← CALC_EXPOSURE
 MATCH (fc:FinalConsumer)
 CALL (fc) {
@@ -355,8 +354,8 @@ RETURN id, name, status, memory, expiryDate;
 // =====================================================================================
 // PARTE D · CYPHER PURO — FALLBACK, VERIFICACIÓN CRUZADA E INFORME DE NEGOCIO
 // Sin GDS ni sesión. Equivale a la parte A. Usa EXISTS { } con camino variable sin cota superior (*0..): válido
-// porque el linaje es un DAG; en grafos muy grandes conviene acotar (*0..20) o materializar el resultado (ver
-// 04_productivizacion.md).
+// porque el linaje es un DAG; en grafos muy grandes conviene acotar (*0..20) o materializar el resultado
+// (se menciona en el cierre de productivización de la demo, RUNBOOK_DEMO.md).
 //
 // Recordatorio de qué es «muerto» (ver cabecera): una columna es muerta si NINGÚN camino con dirección sale de ella
 // hasta un FinalConsumer; un job es muerto si ninguna de sus columnas de salida está viva. Las queries de esta

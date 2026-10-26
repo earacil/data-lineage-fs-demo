@@ -44,7 +44,7 @@ Seis frases, todas de solo lectura. Las que llevan parámetro ofrecen un despleg
 
 ## Diferencias entre el export y las queries del repo, y notas
 
-- **C2 sin `HOSTS`.** `01` C.2b ya incluye `(:SourceSystem)-[:HOSTS]->` para enseñar de qué sistema sale cada origen; la frase de Bloom no. Si se quiere el mismo resultado, la frase debería usar `MATCH p = (:SourceSystem)-[:HOSTS]->(root:Column)-[:TRANSFORMS_TO*1..10]->(:Column {fqn: $column})`.
+- **C2 sin `HOSTS`.** `01` C.2b incluye `(:SourceSystem)-[:HOSTS]->` para enseñar de qué sistema sale cada origen; la frase de Bloom no. **Decisión del autor:** se deja así, porque en Bloom se pueden expandir las relaciones (basta expandir `HOSTS` sobre los orígenes crudos).
 - **Comentarios en la frase «1».** Conserva `// ← CAMBIA` en la query, pero ya es parametrizada (`$column`); el comentario sobra. En la frase C3a quedan comentarios `// producer ESCRIBE c` / `// consumer LEE c`, inocuos.
 - **Nombres internos** de algunas frases (campo `name`, no el texto que ve el usuario): «Full path to FinalCustomer», «Impact produced by a change on a Query». Solo afectan a la gestión de la perspectiva, no a la demo.
 - **`policy.userRoles`** se ha vaciado (`[]`) a mano en el JSON del repo para no publicar el identificador de usuario de Aura de quien exportó. Si se vuelve a exportar desde Bloom, repetir esa limpieza antes de hacer commit.

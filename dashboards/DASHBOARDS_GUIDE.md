@@ -66,4 +66,4 @@ Recordatorio de semántica (de `03`): «muerto» es candidato a retirada, no una
 - El título del filtro del dashboard de impacto es `2. Source System ` **con un espacio final** en el export. Es inocuo; para quitarlo, editarlo en Aura y reexportar.
 - Las queries de las tarjetas son copias de las `▣` de los `.cypher` (la 3.a con `$source_system` y `LIMIT 25`). No hay vínculo automático: si se modifica una query en el `.cypher`, hay que actualizarla también en la tarjeta y reexportar.
 - Ninguno de los dos dashboards usa gráficos de grafo: la parte visual de cada ángulo está en Bloom (impacto) y en `03` A.5 / D.3 (zonas muertas).
-- La parte D de `03` que no está en el dashboard (D.2 y D.3) sigue sin validar.
+- Las queries D.2 y D.3 de `03` no están en el dashboard (D.3 es una query de grafo); están validadas aparte, en el Query tool.

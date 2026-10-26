@@ -3,7 +3,7 @@
 // Demo de Data Lineage para Financial Services · Neo4j 5.x
 //
 // ✅ VALIDADO en Aura (24-oct-2026): la carga completa desde GitHub y el bloque de verificación final
-//    devolvieron los recuentos esperados. (Las queries de ../queries/ siguen sin validar.)
+//    devolvieron los recuentos esperados. (Las queries de ../queries/ también están validadas, 26-oct-2026.)
 //
 // CÓMO USARLO (detalle completo en ../AURA_SETUP.md)
 //   1. Ejecuta el PASO 0 (más abajo): define `baseUrl` — ya apuntando a GitHub, listo para copiar y pegar.

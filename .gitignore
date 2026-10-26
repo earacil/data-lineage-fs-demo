@@ -58,6 +58,11 @@ tmp/
 *.tmp
 
 # ---------------------------------------------------------------------------
+# Guía personal de la demo (notas de ensayo y de sesión; NO se versiona)
+# ---------------------------------------------------------------------------
+GUIA_EJECUCION.md
+
+# ---------------------------------------------------------------------------
 # NO ignorar (comentario deliberado): data/*.csv, queries/*.cypher y
 # bloom/*.json (perspectiva de Bloom) deben versionarse. No añadir reglas
 # amplias como `*.csv` o `*.json`: romperían la carga desde GitHub.

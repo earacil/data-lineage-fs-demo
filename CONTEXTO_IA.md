@@ -11,7 +11,7 @@ Construir una **demo genérica y reutilizable de data lineage sobre Neo4j para F
 1. **Cero referencias a clientes concretos.** Ningún nombre de empresa, persona, fecha de reunión o captura de pantalla de un cliente real debe aparecer en ningún fichero de este proyecto. Si se detecta alguna, es un error a corregir, no una decisión de diseño.
 2. **Idioma**: todos los identificadores del modelo de datos (labels de nodo, tipos de relación, nombres de propiedad) van **en inglés**. La prosa de los `.md` (explicaciones, narrativa, comentarios) va **en español**, salvo que la persona indique lo contrario.
 3. **`Column` y `TRANSFORMS_TO` no se modifican.** Están inspirados en un patrón real de linaje visto en un cliente bancario (detalle en `data-model/NOTAS_DISENO.md`) y son el ancla de credibilidad de toda la demo ("esto ya lo hemos visto funcionar"). Cualquier cambio en sus propiedades o semántica rompe esa credibilidad.
-4. **Validado en Aura por el autor:** `data/00_load_live.cypher` (24-oct-2026, recuentos correctos) y `queries/01_ingesta.cypher` (26-oct-2026). `queries/02_impacto.cypher` está validada por el autor (26-oct-2026; 1 y 2 en Bloom, el resto en el dashboard), salvo la sección 4 (casos especiales), que no se usa en la demo y queda como material de apoyo sin probar. `queries/03_zonas_muertas_gds.cypher` está validada solo en parte: el autor ejecutó (26-oct-2026) una versión previa de las partes A, B y C con sesión implícita; en la parte D (Cypher puro) están validadas D.1, D.4, D.5 (variante), D.6 y D.7 (al montar el dashboard «Data Lineage Dead Zones»). Lo reescrito o nuevo de GDS (A.2–A.5, B.2–B.3, C.1b/C.2b y Z) y D.2/D.3 siguen **sin validar**. La validación la hizo la persona, no el agente que generó los ficheros (su entorno no tiene Neo4j ni GDS). `queries/04_productivizacion.md` es una nota de buenas prácticas, no se ejecuta de punta a punta. Todo Cypher **nuevo o modificado** debe tratarse como "a validar" hasta que se pruebe en Aura o Desktop real.
+4. **Validado en Aura por el autor (26-oct-2026):** `data/00_load_live.cypher` (24-oct-2026, recuentos correctos), `queries/01_ingesta.cypher`, `queries/02_impacto.cypher` (salvo la sección 4, casos especiales, que no se usa en la demo y queda como material de apoyo sin probar), `queries/03_zonas_muertas_gds.cypher` entera (partes A, B, C, Z y D, incluidas D.2/D.3, ejecutadas con sesión AGA implícita), los dos dashboards de `dashboards/` y las 6 search phrases de la perspectiva de Bloom. La validación la hizo la persona, no el agente que generó los ficheros (su entorno no tiene Neo4j ni GDS). Las cifras «esperado» de betweenness salen de un cálculo en Python sobre los CSV, no de GDS. La guía de demo `GUIA_EJECUCION.md` (local, ignorada por git) copia queries ya validadas y marca como «ilustrativo» lo que no lo está (mark & sweep, `db.schema.visualization()`). Todo Cypher **nuevo o modificado** debe tratarse como "a validar" hasta que se pruebe en Aura o Desktop real.
 5. **El dataset es y debe seguir siendo sintético.** No rellenar `data/` con datos reales de ningún cliente, aunque se tenga acceso a ellos para otra tarea.
 
 ## Estado exacto del proyecto ahora mismo
@@ -21,12 +21,13 @@ Construir una **demo genérica y reutilizable de data lineage sobre Neo4j para F
 | `README.md` | ✅ completo | Qué es, por qué un grafo, los 5 ángulos, estructura, estado |
 | `data-model/SCHEMA.md` | ✅ completo | Los 6 tipos de nodo y 5 tipos de relación, con propiedades en inglés |
 | `data-model/NOTAS_DISENO.md` | ✅ completo | Por qué cada decisión de modelado, qué es real vs sintético, fuentes |
-| `RUNBOOK_DEMO.md` | 🟡 parcial | Estructura y timing de 1h + comandos exactos de los bloques 1, 2, 3 y 5; el bloque 4 (Bloom) es un borrador pendiente de ensayo |
+| `RUNBOOK_DEMO.md` | ✅ completo | Estructura y timing de 1h (intro, modelo, ingesta, impacto, zonas muertas, cierre, Q&A) con las queries/herramienta de cada paso; Bloom integrado en los bloques de ingesta e impacto |
+| `GUIA_EJECUCION.md` | ✅ completa; **local, ignorada por git** | Guion personal para leer durante la sesión: preparación, modelo, qué se enseña y para qué en cada paso, queries copiadas, Plan B, Q&A probables, cierre técnico y registro de ensayo. Se genera a partir de los ficheros públicos: si cambian las queries, hay que actualizarla |
 | `data/` | ✅ completo; **`00_load_live.cypher` validado en Aura el 24-oct-2026** (recuentos 81/7/13/6/7 y 66/81/113/25/14 correctos) | 10 CSV, `00_load_live.cypher` (segmentos P0–P5), `generate_dataset.py` (fuente de verdad) y `validate_dataset.py` (consistencia OK) |
-| `queries/` | ✅ completo; `01` validada en Aura (26-oct-2026); `02` validada (salvo la sección 4, fuera de la demo); `03` validada en parte (la parte D en Cypher puro validada salvo D.2/D.3; lo reescrito de GDS, pendiente) | `01_ingesta.cypher`, `02_impacto.cypher`, `03_zonas_muertas_gds.cypher`, `04_productivizacion.md` |
-| `AURA_SETUP.md` | ✅ completo; `baseUrl` validado, sesión AGA implícita probada; la parte Z de `03` pendiente | Requisitos de Aura, parámetros del Query tool (`baseUrl`), flujo de sesión AGA implícita, problemas típicos |
+| `queries/` | ✅ completo y validado en Aura (26-oct-2026); la sección 4 de `02` queda fuera de la demo, sin probar | `01_ingesta.cypher`, `02_impacto.cypher`, `03_zonas_muertas_gds.cypher` |
+| `AURA_SETUP.md` | ✅ completo; `baseUrl` y flujo de sesión AGA implícita (incluida la parte Z) validados | Requisitos de Aura, parámetros del Query tool (`baseUrl`), flujo de sesión AGA implícita, problemas típicos |
 | `dashboards/` | ✅ «Data Lineage Impact» creado, verificado y exportado (`data_lineage_fs_impact_dashboard.json`, 26-oct-2026). ✅ «Data Lineage Dead Zones» creado, verificado y exportado (`data_lineage_fs_dead_zones_dashboard.json`, 26-oct-2026) | Impact: 5 tarjetas + 1 filtro (`$source_system`), de las queries `▣` de `02_impacto.cypher`. Dead Zones: 5 tarjetas (single value, bar chart y 3 tablas), de las queries `▣` de `03`, parte D |
-| `bloom/` | ✅ perspectiva creada, probada y exportada (`data_lineage_fs_perspective.json`, 26-oct-2026); 🟡 guía y guion redactados como borrador | Perspectiva con estilo por defecto, 6 search phrases parametrizadas, sin scene actions ni estilo condicional. `BLOOM_GUIDE.md` documenta el export; `BLOOM_DEMO_FLOW.md` es un guion de 4 actos por ensayar |
+| `bloom/` | ✅ perspectiva creada, probada y exportada (`data_lineage_fs_perspective.json`, 26-oct-2026) y documentada | Perspectiva con estilo por defecto, 6 search phrases parametrizadas, sin scene actions ni estilo condicional. `BLOOM_GUIDE.md` documenta el export. El guion de uso está integrado en `RUNBOOK_DEMO.md` y `GUIA_EJECUCION.md` (no hay guion de Bloom aparte) |
 
 ## Próximos pasos, en orden, con criterio de aceptación
 
@@ -43,15 +44,14 @@ Incluye (todo verificado por `data/validate_dataset.py`), como mínimo, para que
 - `01_ingesta.cypher`: patrón `MERGE` idempotente por `fqn`/`id`, pensado para ejecutarse en vivo y demostrar la auto-conexión del punto anterior.
 - `02_impacto.cypher`: camino variable descendente por `fqn` (en forma de paths, para Bloom), camino completo sistema → informe y blast radius por sistema (el linaje ascendente se enseña en `01_ingesta.cypher`, C.2/C.2b), más una sección de criticidad por alcance (qué columnas/jobs afectan a más informes; conteo de caminos, no centralidad de grafo).
 - `03_zonas_muertas_gds.cypher`: proyección GDS + BFS en reversa desde `FinalConsumer` (parte A), por qué WCC no basta (B, material de apoyo fuera de la demo), centralidad de verdad con PageRank y betweenness para localizar cuellos de botella (C, extra), cierre de la sesión (Z) y **un fallback en Cypher puro** (D, `NOT EXISTS` de alcanzabilidad) por si GDS falla o no está disponible. Sesión AGA implícita: no hay paso previo de sesión. Las queries `▣` de D alimentan el dashboard «Data Lineage Dead Zones».
-- `04_productivizacion.md`: no es Cypher ejecutable — son buenas prácticas (ingesta idempotente, separación de la capa semántica, informe periódico de zonas muertas) con 1-2 queries de ejemplo.
+- Productivización (ángulo 5): ya **no hay fichero propio**. Se cuenta como un cierre corto de la demo (ingesta idempotente y mark & sweep, capa técnica vs. semántica, informe periódico de zonas muertas sin borrado automático, escala y seguridad); el detalle vive en `GUIA_EJECUCION.md` §7 y el resumen en `RUNBOOK_DEMO.md`.
 
-### 3. Bloom (`bloom/`) — 🟡 perspectiva exportada; guía y guion en borrador
-- `bloom/data_lineage_fs_perspective.json` exportado. `BLOOM_GUIDE.md` y `BLOOM_DEMO_FLOW.md` redactados a partir del export real (no inventar estilos ni scene actions que no estén en el JSON). Pendiente: ensayar el guion y decidir si la frase `C2` incorpora el tramo `HOSTS` como `01` C.2b.
-- Solo tiene sentido después del dataset y las queries, porque las scene actions y search phrases dependen de los valores reales del dataset.
-- Seguir el formato de "guion en actos con talking points entre comillas" descrito en `data-model/NOTAS_DISENO.md` (inspirado en `BLOOM_DEMO_FLOW.md` del repo de referencia).
+### 3. Bloom (`bloom/`) — ✅ HECHO
+- `bloom/data_lineage_fs_perspective.json` exportado y probado; `BLOOM_GUIDE.md` lo documenta a partir del export real (no inventar estilos ni scene actions que no estén en el JSON).
+- Las search phrases se usan dentro de los bloques de ingesta (`C1`, `C2`, `C3a`, `C3b`) e impacto (`1`, `2`) del runbook. Diferencia conocida y aceptada: la frase `C2` no incluye el tramo `HOSTS` que sí tiene `01` C.2b; en Bloom se resuelve expandiendo la relación.
 
-### 4. Cerrar `RUNBOOK_DEMO.md` — 🟡 parcial (bloque Bloom en borrador, pendiente de ensayo)
-- Una vez existan queries y escenas concretas, sustituir las descripciones genéricas de cada bloque por los comandos/acciones exactas a ejecutar.
+### 4. `RUNBOOK_DEMO.md` y guía personal — ✅ HECHO
+- `RUNBOOK_DEMO.md` es la plantilla pública con tiempos y herramienta de cada paso; `GUIA_EJECUCION.md` (local) es su versión extendida para leer durante la sesión. Pendiente solo del autor: ensayar con cronómetro y anotar los tiempos reales en el registro de la guía.
 
 ## Mapa de ficheros
 
@@ -59,7 +59,8 @@ Incluye (todo verificado por `data/validate_dataset.py`), como mínimo, para que
 data-lineage-fs-demo/
 ├── CONTEXTO_IA.md          ← este fichero (léelo primero)
 ├── README.md               ← punto de entrada para humanos: qué es y por qué
-├── RUNBOOK_DEMO.md          ← guion de la demo de 1h
+├── RUNBOOK_DEMO.md          ← guion de la demo de 1h (plantilla pública)
+├── GUIA_EJECUCION.md        ← guía personal ampliada de la demo (LOCAL, en .gitignore; no existe en un clon limpio)
 ├── AURA_SETUP.md            ← la demo se hace en Aura: `baseUrl` = GitHub raw, y parámetros de Aura Graph Analytics (GDS serverless)
 ├── .gitignore               ← NO añadir reglas amplias (`*.csv`, `*.json`): romperían la carga desde GitHub y la perspectiva de Bloom
 ├── dashboards/
@@ -77,9 +78,8 @@ data-lineage-fs-demo/
 │   └── validate_dataset.py  ← integridad referencial + criterios de aceptación
 ├── queries/
 │   ├── README.md
-│   ├── 01_ingesta.cypher · 02_impacto.cypher · 03_zonas_muertas_gds.cypher
-│   └── 04_productivizacion.md
-└── bloom/                   ← perspectiva exportada (JSON), BLOOM_GUIDE.md y BLOOM_DEMO_FLOW.md (borrador)
+│   └── 01_ingesta.cypher · 02_impacto.cypher · 03_zonas_muertas_gds.cypher
+└── bloom/                   ← perspectiva exportada (JSON) y BLOOM_GUIDE.md
 ```
 
 ## Fuentes de inspiración (resumen — detalle completo en `data-model/NOTAS_DISENO.md`)

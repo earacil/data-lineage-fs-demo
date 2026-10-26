@@ -57,7 +57,8 @@
 // 1. DESCENDENTE — ¿qué rompe si cambia `CORE.LOAN.DRAWN_AMOUNT`?
 //    Esperado: 8 columnas en su descendencia (ella incluida), 3 informes (Solvency Report, Large Exposures
 //    Report y Risk Data Aggregation Dashboard) y 4 jobs que la tocan (LOAD_CORE_LOANS, CALC_EXPOSURE,
-//    CALC_RWA y BUILD_COREP_SOLVENCY). Cifras calculadas sobre los CSV, no con Neo4j.
+//    CALC_RWA y BUILD_COREP_SOLVENCY). Con el proyecto nuevo de 01 (bloque B) cargado: 9 columnas y 5 jobs
+//    (+RWA_DENSITY y BUILD_RWA_DENSITY); los 3 informes no cambian. Cifras calculadas sobre los CSV, no con Neo4j.
 // -------------------------------------------------------------------------------------
 
 // 1 · Impacto descendente en UNA sola query, para verla como grafo en Bloom/Browser.

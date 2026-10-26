@@ -3,7 +3,7 @@
 > Todo el contenido es **sintético**: una historia plausible de banca construida para que los 5 ángulos de la demo tengan sentido. No representa a ningún cliente real.
 >
 > ✅ **Validado en Aura (24-oct-2026):** `00_load_live.cypher` cargado desde GitHub (`baseUrl` = raw.githubusercontent.com) y el bloque de verificación devolvió exactamente los recuentos esperados (81 / 7 / 13 / 6 / 7 nodos; 66 / 81 / 113 / 25 / 14 aristas). Los CSV, además, pasan `validate_dataset.py`.
-> ✅ Carga y `../queries/01_ingesta.cypher` validadas en Aura. ⚠️ `02` y `03` siguen **sin validar** (ver `../CONTEXTO_IA.md`, restricción 4).
+> ✅ Carga y `../queries/` validadas en Aura por el autor (26-oct-2026; ver `../CONTEXTO_IA.md`, restricción 4).
 
 Formato: **CSV + script de carga `LOAD CSV`** segmentado por proyecto, pensado para narrarse en vivo. Nombres de nodo/relación/propiedad en inglés, tal como en `../data-model/SCHEMA.md`.
 

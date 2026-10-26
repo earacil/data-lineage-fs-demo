@@ -1,0 +1,253 @@
+{
+  "version": 2,
+  "title": "Data Lineage Impact",
+  "description": "",
+  "pages": [
+    {
+      "id": "0",
+      "version": 1,
+      "title": "Main page",
+      "widgets": [
+        {
+          "version": 1,
+          "title": "3. #Reports Affected if a Job Fails",
+          "w": 12,
+          "h": 4,
+          "x": 0,
+          "y": 5,
+          "meta": {
+            "latestCypherQueries": [
+              {
+                "query": "MATCH (j:EtlJob)\nOPTIONAL MATCH ()-[t:TRANSFORMS_TO {scenario: j.name}]->(out:Column)\nOPTIONAL MATCH (out)-[:TRANSFORMS_TO*0..10]->(:Column)-[:FEEDS]->(fc:FinalConsumer)\nRETURN j.name AS job, j.status AS status, j.estimated_compute_cost AS annual_cost_eur,\n       count(DISTINCT fc) AS consumers_depending\nORDER BY consumers_depending ASC, annual_cost_eur DESC;",
+                "origin": "user"
+              },
+              {
+                "query": "MATCH (j:EtlJob)\nOPTIONAL MATCH ()-[t:TRANSFORMS_TO {scenario: j.name}]->(out:Column)\nOPTIONAL MATCH (out)-[:TRANSFORMS_TO*0..10]->(:Column)-[:FEEDS]->(fc:FinalConsumer)\nRETURN j.name AS job, j.status AS status, j.estimated_compute_cost AS annual_cost_eur,\n       count(DISTINCT fc) AS consumers_depending\nORDER BY consumers_depending DESC, annual_cost_eur DESC;",
+                "origin": "user"
+              }
+            ]
+          },
+          "settings": {
+            "type": "bar",
+            "query": "MATCH (j:EtlJob)\nOPTIONAL MATCH ()-[t:TRANSFORMS_TO {scenario: j.name}]->(out:Column)\nOPTIONAL MATCH (out)-[:TRANSFORMS_TO*0..10]->(:Column)-[:FEEDS]->(fc:FinalConsumer)\nRETURN j.name AS job, j.status AS status, j.estimated_compute_cost AS annual_cost_eur,\n       count(DISTINCT fc) AS consumers_depending\nORDER BY consumers_depending ASC, annual_cost_eur DESC;",
+            "databaseName": "neo4j",
+            "valueKeys": [
+              "consumers_depending"
+            ],
+            "dimensionAxisLabel": "ETL Job",
+            "valueAxisLabel": "Reports",
+            "orientation": "horizontal",
+            "scaleType": "linear",
+            "showLegend": "auto",
+            "showDataZoom": "auto",
+            "version": 1,
+            "barArrangement": "stacked"
+          }
+        },
+        {
+          "version": 1,
+          "title": "4. Regulatory Report Data",
+          "w": 12,
+          "h": 4,
+          "x": 0,
+          "y": 9,
+          "meta": {
+            "latestCypherQueries": [
+              {
+                "query": "MATCH (fc:FinalConsumer {type: 'Regulatory'})<-[:FEEDS]-(leaf:Column)\nMATCH p = (root:Column)-[:TRANSFORMS_TO*1..10]->(leaf)\nWHERE NOT EXISTS { ()-[:TRANSFORMS_TO]->(root) }\nUNWIND relationships(p) AS r\nWITH fc, collect(DISTINCT root) AS roots, collect(DISTINCT r.scenario) AS jobs\nUNWIND roots AS root\nOPTIONAL MATCH (ss:SourceSystem)-[:HOSTS]->(root)\nWITH fc, jobs, size(roots) AS origin_columns, collect(DISTINCT ss.name) AS source_systems\nRETURN fc.name AS report, fc.regulation AS regulation, origin_columns, source_systems,\n       size(jobs) AS jobs_involved, jobs\nORDER BY report;",
+                "origin": "user"
+              },
+              {
+                "query": "MATCH (fc:FinalConsumer {type: 'Regulatory'})<-[:FEEDS]-(leaf:Column)\nMATCH p = (root:Column)-[:TRANSFORMS_TO*1..10]->(leaf)\nWHERE NOT EXISTS { ()-[:TRANSFORMS_TO]->(root) }\nUNWIND relationships(p) AS r\nWITH fc, collect(DISTINCT root) AS roots, collect(DISTINCT r.scenario) AS jobs\nUNWIND roots AS root\nOPTIONAL MATCH (ss:SourceSystem)-[:HOSTS]->(root)\nWITH fc, jobs, size(roots) AS origin_columns, collect(DISTINCT ss.name) AS source_systems\nRETURN fc.name AS report, fc.regulation AS regulation, origin_columns, source_systems,\n       size(jobs) AS jobs_involved\nORDER BY report\nLIMIT 25;",
+                "origin": "user"
+              }
+            ]
+          },
+          "settings": {
+            "type": "table",
+            "query": "MATCH (fc:FinalConsumer {type: 'Regulatory'})<-[:FEEDS]-(leaf:Column)\nMATCH p = (root:Column)-[:TRANSFORMS_TO*1..10]->(leaf)\nWHERE NOT EXISTS { ()-[:TRANSFORMS_TO]->(root) }\nUNWIND relationships(p) AS r\nWITH fc, collect(DISTINCT root) AS roots, collect(DISTINCT r.scenario) AS jobs\nUNWIND roots AS root\nOPTIONAL MATCH (ss:SourceSystem)-[:HOSTS]->(root)\nWITH fc, jobs, size(roots) AS origin_columns, collect(DISTINCT ss.name) AS source_systems\nRETURN fc.name AS report, fc.regulation AS regulation, origin_columns, source_systems,\n       size(jobs) AS jobs_involved, jobs\nORDER BY report;",
+            "databaseName": "neo4j",
+            "actions": [],
+            "version": 1,
+            "richRenderCells": true,
+            "compact": false,
+            "dataGridStyleRules": [
+              {
+                "apply": {
+                  "colorRange": {
+                    "maxColor": "#f16767",
+                    "maxValue": 20,
+                    "minColor": "#ffffff",
+                    "minValue": 1,
+                    "onColumn": "origin_columns"
+                  }
+                },
+                "column": "origin_columns",
+                "metaData": {
+                  "id": "sRPQ4rb3eMGorbJNNpKyy"
+                },
+                "priority": 0
+              }
+            ]
+          }
+        },
+        {
+          "version": 1,
+          "title": "5. Accountability Gaps",
+          "w": 6,
+          "h": 2,
+          "x": 0,
+          "y": 13,
+          "meta": {
+            "latestCypherQueries": [
+              {
+                "query": "MATCH (j:EtlJob)\nWHERE NOT EXISTS { MATCH (j)-[:MAINTAINED_BY]->(:Owner) }\nOPTIONAL MATCH ()-[t:TRANSFORMS_TO {scenario: j.name}]->(out:Column)\nOPTIONAL MATCH (out)-[:TRANSFORMS_TO*0..10]->(:Column)-[:FEEDS]->(fc:FinalConsumer)\nRETURN j.name AS ownerless_job, j.status AS status, collect(DISTINCT fc.name) AS consumers_served,\n       count(DISTINCT CASE WHEN fc.type = 'Regulatory' THEN fc END) AS regulatory_consumers_served;",
+                "origin": "user"
+              }
+            ]
+          },
+          "settings": {
+            "type": "table",
+            "query": "MATCH (j:EtlJob)\nWHERE NOT EXISTS { MATCH (j)-[:MAINTAINED_BY]->(:Owner) }\nOPTIONAL MATCH ()-[t:TRANSFORMS_TO {scenario: j.name}]->(out:Column)\nOPTIONAL MATCH (out)-[:TRANSFORMS_TO*0..10]->(:Column)-[:FEEDS]->(fc:FinalConsumer)\nRETURN j.name AS ownerless_job, j.status AS status, collect(DISTINCT fc.name) AS consumers_served,\n       count(DISTINCT CASE WHEN fc.type = 'Regulatory' THEN fc END) AS regulatory_consumers_served;",
+            "databaseName": "neo4j",
+            "actions": [],
+            "version": 1,
+            "richRenderCells": true,
+            "compact": false,
+            "dataGridStyleRules": [
+              {
+                "apply": {
+                  "color": {
+                    "value": "#ffdf81"
+                  }
+                },
+                "column": "regulatory_consumers_served",
+                "metaData": {
+                  "id": "XTwLgdUd9bwX8I668YI3-"
+                },
+                "priority": 0,
+                "where": {
+                  "equal": [
+                    {
+                      "column": "regulatory_consumers_served"
+                    },
+                    0
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "version": 1,
+          "title": "2. Affected Reports (Consumer)",
+          "w": 6,
+          "h": 4,
+          "x": 6,
+          "y": 1,
+          "meta": {
+            "latestCypherQueries": [
+              {
+                "query": "MATCH (ss:SourceSystem {name: $source_system})\nMATCH (ss)-[:HOSTS]->(root:Column)\nWHERE NOT EXISTS { ()-[:TRANSFORMS_TO]->(root) }\nMATCH (root)-[:TRANSFORMS_TO*0..10]->(:Column)-[:FEEDS]->(fc:FinalConsumer)\nRETURN fc.name AS affected_consumer, fc.type AS type, fc.regulation AS regulation,\n       count(DISTINCT root) AS origin_columns_involved\nORDER BY regulation DESC, affected_consumer\nLIMIT 25;",
+                "origin": "user"
+              }
+            ]
+          },
+          "settings": {
+            "type": "table",
+            "query": "MATCH (ss:SourceSystem {name: $source_system})\nMATCH (ss)-[:HOSTS]->(root:Column)\nWHERE NOT EXISTS { ()-[:TRANSFORMS_TO]->(root) }\nMATCH (root)-[:TRANSFORMS_TO*0..10]->(:Column)-[:FEEDS]->(fc:FinalConsumer)\nRETURN fc.name AS affected_consumer, fc.type AS type, fc.regulation AS regulation,\n       count(DISTINCT root) AS origin_columns_involved\nORDER BY regulation DESC, affected_consumer\nLIMIT 25;",
+            "databaseName": "neo4j",
+            "actions": [],
+            "version": 1,
+            "richRenderCells": true,
+            "compact": false,
+            "dataGridStyleRules": [
+              {
+                "apply": {
+                  "color": {
+                    "value": "#ffdf81"
+                  },
+                  "textColor": {
+                    "isDisabled": true,
+                    "value": "#ffffff"
+                  }
+                },
+                "column": "type",
+                "metaData": {
+                  "id": "uUY2JA930Eg0xkcOG9Ke1"
+                },
+                "priority": 0,
+                "where": {
+                  "contains": [
+                    {
+                      "column": "type"
+                    },
+                    "Regulatory"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "version": 1,
+          "title": "1. Source Systems by Impact",
+          "w": 6,
+          "h": 5,
+          "x": 0,
+          "y": 0,
+          "meta": {
+            "latestCypherQueries": [
+              {
+                "query": "MATCH (ss:SourceSystem)-[:HOSTS]->(root:Column)\nWHERE NOT EXISTS { ()-[:TRANSFORMS_TO]->(root) }\nOPTIONAL MATCH (root)-[:TRANSFORMS_TO*0..10]->(:Column)-[:FEEDS]->(fc:FinalConsumer)\nRETURN ss.name AS source_system, ss.criticality AS declared_criticality,\n       count(DISTINCT fc) AS consumers_affected,\n       count(DISTINCT CASE WHEN fc.type = 'Regulatory' THEN fc END) AS regulatory_consumers_affected\nORDER BY regulatory_consumers_affected DESC, consumers_affected DESC;",
+                "origin": "user"
+              }
+            ]
+          },
+          "settings": {
+            "type": "bar",
+            "query": "MATCH (ss:SourceSystem)-[:HOSTS]->(root:Column)\nWHERE NOT EXISTS { ()-[:TRANSFORMS_TO]->(root) }\nOPTIONAL MATCH (root)-[:TRANSFORMS_TO*0..10]->(:Column)-[:FEEDS]->(fc:FinalConsumer)\nRETURN ss.name AS source_system, ss.criticality AS declared_criticality,\n       count(DISTINCT fc) AS consumers_affected,\n       count(DISTINCT CASE WHEN fc.type = 'Regulatory' THEN fc END) AS regulatory_consumers_affected\nORDER BY regulatory_consumers_affected DESC, consumers_affected DESC;",
+            "databaseName": "neo4j",
+            "valueKeys": [
+              "consumers_affected",
+              "regulatory_consumers_affected"
+            ],
+            "orientation": "vertical",
+            "scaleType": "linear",
+            "showLegend": "auto",
+            "showDataZoom": "auto",
+            "version": 1,
+            "barArrangement": "grouped"
+          }
+        },
+        {
+          "version": 1,
+          "title": "2. Source System ",
+          "w": 6,
+          "h": 1,
+          "x": 6,
+          "y": 0,
+          "meta": {},
+          "settings": {
+            "version": 1,
+            "type": "filter",
+            "databaseName": "neo4j",
+            "entityType": "node",
+            "entityLabel": "SourceSystem",
+            "entityPropertyKey": "name",
+            "parameterName": "source_system",
+            "enableTimeZone": false,
+            "numberType": "Integer"
+          }
+        }
+      ]
+    }
+  ],
+  "params": [
+    {
+      "version": 1,
+      "key": "source_system",
+      "initialValue": "Core Banking PL/SQL"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 // =====================================================================================
-// 03_zonas_muertas_gds.cypher — Ángulo 3: zonas muertas con GDS (+ fallback en Cypher puro)
+// 03_zonas_muertas_gds.cypher — Ángulo 3: zonas muertas con GDS (+ fallback en Cypher puro) y cuellos de botella
 // Demo de Data Lineage para Financial Services · AuraDB + Aura Graph Analytics (GDS serverless)
 //
 // ⚠️  NO VALIDADO contra una instancia Aura real (ver CONTEXTO_IA.md, restricción 4). Las llamadas
@@ -42,7 +42,8 @@
 //   0. Sesión AGA: estimar, crear, anotar sessionId
 //   A. BFS en reversa desde FinalConsumer (proyección Cypher con la dirección invertida)
 //   B. Por qué un componente conexo (WCC) NO basta (sólo ve la zona 1)
-//   Z. Borrar la sesión
+//   D. Cuellos de botella con algoritmos de centralidad (PageRank, betweenness) — extra, tras las zonas muertas
+//   Z. Borrar la sesión (DESPUÉS de la parte D: ésta reutiliza la proyección `lineage_rev`)
 //   C. Cypher puro: fallback / verificación cruzada, y el informe de negocio (jobs, ahorro, sistemas)
 // =====================================================================================
 
@@ -169,6 +170,61 @@ WHERE size([m IN members WHERE m:FinalConsumer]) = 0
 UNWIND [m IN members WHERE m:Column] AS c
 RETURN 'WCC detecta' AS method, c.fqn AS dead_column
 ORDER BY dead_column;
+
+
+// =====================================================================================
+// PARTE D · CUELLOS DE BOTELLA CON ALGORITMOS DE CENTRALIDAD  (extra; requiere A.1 y la sesión activa)
+// Es lo que 02_impacto no puede hacer con conteos de caminos: medir cuánto "pasa por" un nodo.
+//   · 02·5 (Cypher)      → "¿a cuántos informes llega esto?"            (alcance aguas abajo, desde un nodo)
+//   · PageRank (D.1)     → "¿de qué columnas depende, transitivamente, todo lo demás?"  (importancia aguas arriba)
+//   · Betweenness (D.2)  → "¿por qué columnas pasan más caminos origen→informe?"        (cuello de botella)
+// Se usa la proyección `lineage_rev` de A.1 (dirección invertida: informe → … → origen crudo).
+// Betweenness da el mismo resultado en el grafo natural y en el invertido; PageRank NO: aquí la puntuación
+// fluye de los consumidores hacia los orígenes, y por eso destacan los orígenes de los que cuelga mucho.
+// Los nodos FinalConsumer están en la proyección, pero se filtran con `:Column` al volver a la BD.
+// Las columnas muertas puntúan lo mínimo en PageRank (0.15, sin aristas entrantes en la proyección).
+// Ni PageRank ni betweenness "saben" qué está vivo: para eso, parte A.
+// Las cifras "esperado" salen de un cálculo en Python sobre los CSV (Brandes y PageRank estilo GDS, 20 iteraciones,
+// d = 0.85), NO de GDS: el orden debería coincidir, los decimales pueden variar un poco.
+// =====================================================================================
+
+// D.1 · PageRank: columnas de las que más depende el resto del linaje
+//       esperado (aprox.): CORE.LOAN.ASSET_CLASS (≈0.61), CRM.CUSTOMER.SEGMENT_CODE (≈0.60),
+//       CORE.LOAN.DRAWN_AMOUNT (≈0.57), STG.STG_LOAN.ASSET_CLASS, STG.STG_CUSTOMER.SEGMENT_CODE → casi todo orígenes crudos
+CALL gds.pageRank.stream('lineage_rev')
+YIELD nodeId, score
+MATCH (c:Column) WHERE id(c) = nodeId
+OPTIONAL MATCH (ss:SourceSystem)-[:HOSTS]->(c)
+RETURN c.fqn AS column, ss.name AS hosted_in, round(score, 3) AS pagerank
+ORDER BY pagerank DESC
+LIMIT 10;
+
+// D.2 · Betweenness: columnas por las que pasan más caminos mínimos entre origen e informe (puntos de estrangulamiento)
+//       esperado: RISK_MART.EXPOSURE.EAD (28), RISK_MART.EXPOSURE.RATING_BUCKET (23), RISK_MART.RWA.RWA_AMOUNT (23),
+//       RISK_MART.RWA.RATING_BUCKET (20) → todas en el motor de riesgo; CHURN_RISK_FLAG (11) queda lejos
+//       Lectura: son las columnas intermedias donde "se juntan" varios proyectos. Si fallan, no cae un origen:
+//       se corta el tramo que une varios.
+CALL gds.betweenness.stream('lineage_rev')
+YIELD nodeId, score
+WHERE score > 0
+MATCH (c:Column) WHERE id(c) = nodeId
+OPTIONAL MATCH ()-[t:TRANSFORMS_TO]->(c)
+RETURN c.fqn AS column, collect(DISTINCT t.scenario) AS produced_by_jobs, round(score, 1) AS betweenness
+ORDER BY betweenness DESC
+LIMIT 10;
+
+// D.3 · Betweenness agregada por job: ¿qué EtlJob es el cuello de botella? (suma de las columnas que produce)
+//       esperado: CALC_EXPOSURE (64), CALC_RWA (48), LOAD_CORE_LOANS y BUILD_CHURN_FEATURES (31 cada uno)…
+//       Matiz: PROMO_SEGMENT_EXTRACT (2) sale con valor > 0 aunque es un job MUERTO: betweenness mide posición
+//       en el grafo, no si hay consumidor. Cruza siempre con la parte A / C.4 para no retirar lo que aparece aquí.
+CALL gds.betweenness.stream('lineage_rev')
+YIELD nodeId, score
+MATCH (c:Column) WHERE id(c) = nodeId
+MATCH ()-[t:TRANSFORMS_TO]->(c)
+WITH c, score, collect(DISTINCT t.scenario) AS jobs
+UNWIND jobs AS job
+RETURN job, count(c) AS output_columns, round(sum(score), 1) AS betweenness_sum
+ORDER BY betweenness_sum DESC;
 
 
 // =====================================================================================

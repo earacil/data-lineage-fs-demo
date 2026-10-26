@@ -41,6 +41,7 @@ data-lineage-fs-demo/
 │   └── NOTAS_DISENO.md            ← decisiones de diseño, qué es sintético, fuentes
 ├── data/                          ← CSVs del dataset sintético, script de carga `LOAD CSV`, generador y validador
 ├── queries/                       ← .cypher por ángulo de negocio + nota de productivización
+├── dashboard/                     ← export del dashboard de Aura (resumen agregado de impacto)
 └── bloom/                         ← perspectiva (creada en Aura, pendiente de exportar), guía y guion de escenas
 ```
 
@@ -51,7 +52,9 @@ data-lineage-fs-demo/
 - [x] Generar dataset sintético multi-proyecto (CSV + LOAD CSV, carga en vivo) — consistencia comprobada con `data/validate_dataset.py`
 - [x] Escribir las 3 queries de los ángulos 1-3 — `01` validada en Aura; `02` y `03` sin validar
 - [x] Escribir nota de productivización (ángulo 5)
-- [ ] Validar `02_impacto` y `03_zonas_muertas_gds` (incluida la sesión Aura Graph Analytics) en Aura
+- [x] Dashboard de Aura creado y exportado (`dashboard/`)
+- [x] `02_impacto` validada (la sección 4 queda fuera de la demo)
+- [ ] Validar en Aura `03_zonas_muertas_gds` (incluida la sesión Aura Graph Analytics)
 - [x] Configurar la perspectiva de Bloom en Aura (ángulo 4)
 - [ ] Exportar la perspectiva a `bloom/data_lineage_fs_perspective.json` y escribir guía y guion de escenas
 - [ ] Al preparar esta demo para un cliente concreto: ajustar nombres de sistemas/informes a su contexto real, sin tocar esta versión genérica — crear una copia o una capa de personalización aparte

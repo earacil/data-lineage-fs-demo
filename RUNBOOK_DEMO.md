@@ -8,7 +8,7 @@
 |---|---|---|---|
 | Intro | 5 min | Por qué un grafo para lineage en banca (gobierno de datos, trazabilidad de informes regulatorios hasta su origen) | — |
 | Ingesta en vivo | 10 min | Cargar 2-3 proyectos ETL en directo; mostrar cómo un `EtlJob` nuevo se autoconecta a columnas ya existentes de otro proyecto, sin integración manual | 1 |
-| Impacto ascendente/descendente | 15 min | Trazado de linaje completo y "¿qué rompe si cambia esta columna/este sistema?"; incluir un caso de `CASE WHEN` multi-origen ya resuelto en el dataset | 2 |
+| Impacto ascendente/descendente | 15 min | Trazado de linaje completo y "¿qué rompe si cambia esta columna/este sistema?" (sin entrar en el detalle de cómo está modelado el dato sintético) | 2 |
 | Zonas muertas con GDS | 10 min | Proyección GDS + BFS reverso desde `FinalConsumer`; candidatos a retirada de `EtlJob` con coste de cómputo asociado | 3 |
 | Bloom | 10 min | Guion en escenas sobre la perspectiva ya preparada (ver `bloom/BLOOM_DEMO_FLOW.md`) | 4 |
 | Productivización + cierre | 8 min | Buenas prácticas de ingesta idempotente, propiedad por job, informe periódico de zonas muertas | 5 |
@@ -36,11 +36,11 @@
 
 | Min | Acción | Qué decir |
 |---|---|---|
-| 0-4 | **1.a / 1.b** sobre `REG_MART.SOLVENCY.TOTAL_RWA` | "De dónde sale una cifra de solvencia: 2 sistemas, 5 jobs, 3 proyectos." |
-| 4-8 | **2.a / 2.b** sobre `CORE.LOAN.DRAWN_AMOUNT` | "Si cambia esta columna, estos informes se ven afectados." Señalar la rama muerta que también cuelga de ella (gancho al bloque 3) |
-| 8-10 | **4.a** (si cae el Core) y **4.c** (falla `CALC_EXPOSURE`, con "a quién llamo") | "Blast radius a nivel de sistema y de job." |
-| 10-12 | **5.a** (`CASE WHEN` de 3 orígenes) y **5.b** (CONSTANT/TABLE) | "Lógica SQL abstracta que un modelo relacional representa mal." |
-| 12-15 | **6.a / 6.b** (centralidad) y **7.a** (trazabilidad BCBS 239 por informe) | "Dónde duele más que algo falle y cuántos orígenes tiene cada informe regulatorio." |
+| 0-4 | **1** (una sola query, en grafo/Bloom) sobre `CORE.LOAN.DRAWN_AMOUNT` | "Si cambia esta columna: 3 informes y 4 jobs a revisar, y a quién llamar." Señalar la columna muerta `EXPOSURE_ADJ_LEGACY` (gancho al bloque 3). El linaje ascendente ya se vio en el bloque 1 (C.2b) |
+| 4-8 | **2.a** (grafo sistema → informe) y **2.b** (tabla) sobre `Solvency Report` | "De dónde sale un informe regulatorio: qué sistemas y cuántas columnas origen aporta cada uno." |
+| 8-10 | **3.a** (si cae el Core) y **3.b** (ranking de sistemas) | "Blast radius a nivel de sistema." |
+| 10-15 | **5** (jobs por informes que dependen de ellos) y **6.a** (trazabilidad BCBS 239 por informe) | "Dónde duele más que algo falle y cuántos orígenes tiene cada informe regulatorio." |
+| (opcional, 2-3 min) | **Dashboard de Aura** `Data Lineage Impact` (`dashboard/data_lineage_fs_impact_dashboard.json`) con las 5 tarjetas marcadas `▣` en `02_impacto.cypher` (3.b, 3.a con filtro, 5, 6.a, 6.b) | "Lo que acabamos de ver en grafo, resumido en una pantalla." Mejor como cierre del bloque o como material para dejar al cliente que como parte del flujo en vivo |
 
 ### 3 · Zonas muertas con GDS (10 min) — `queries/03_zonas_muertas_gds.cypher`
 
@@ -52,7 +52,8 @@
 | 6-8 | **C.2** (puntos de bifurcación) y **C.4/C.5** (jobs muertos y ahorro) | "127.000 € al año en jobs que nadie consume, uno de ellos deprecado y sin propietario." |
 | 8-10 | **C.6** y **C.7** | "Una columna sobra en un job que sí se queda; un sistema entero al 0 %." |
 | −5 | **Antes del bloque:** parte **0** (crear la sesión AGA y `:param sessionId`) — tarda en pasar a `Ready` | — |
-| 10 | Parte **Z**: borrar la sesión al terminar (deja de facturar) | — |
+| +2 (opcional) | Parte **D** (D.1 PageRank, D.2/D.3 betweenness), con la sesión aún viva | "Cypher cuenta hasta dónde llega un dato; el algoritmo dice por dónde pasa todo: CALC_EXPOSURE y CALC_RWA son los cuellos de botella." Aviso: betweenness no distingue vivo de muerto (PROMO_SEGMENT_EXTRACT también puntúa); por eso va después de A |
+| 10 | Parte **Z**: borrar la sesión al terminar (deja de facturar). **Siempre después de D** | — |
 | — | **Plan B si GDS falla:** ir directamente a la parte **C** (mismo resultado en Cypher puro) | — |
 
 ### 4 · Bloom (10 min) — *perspectiva creada en Aura; guion pendiente*

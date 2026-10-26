@@ -178,8 +178,11 @@ RETURN ss.name AS source_system, root.fqn AS origin_column, length(p) AS hops,
 ORDER BY hops DESC, origin_column;
 
 // C.2b · Mismo linaje para visualizar en Browser/Bloom — paso 2 de la historia: "¿por dónde fluye el dato?"
-//        (las columnas, desde los orígenes crudos de Core Banking y SAS hasta RWA_DENSITY)
-MATCH p = (root:Column)-[:TRANSFORMS_TO*1..10]->(:Column {fqn: 'REG_MART.CAPITAL.RWA_DENSITY'})
+//        (desde el sistema que aloja cada origen crudo hasta RWA_DENSITY)
+//        ► AÑADIDO: el tramo (SourceSystem)-[:HOSTS]->(origen) al principio del path, para que el grafo
+//          enseñe también DE QUÉ SISTEMA sale cada dato, no solo las columnas. (Es el único linaje
+//          ascendente de la demo: 02_impacto ya no repite esta consulta.)
+MATCH p = (:SourceSystem)-[:HOSTS]->(root:Column)-[:TRANSFORMS_TO*1..10]->(:Column {fqn: 'REG_MART.CAPITAL.RWA_DENSITY'})   // ◄ HOSTS añadido
 WHERE NOT EXISTS { ()-[:TRANSFORMS_TO]->(root) }
 RETURN p;
 
